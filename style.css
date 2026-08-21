@@ -1,0 +1,37 @@
+h2 {
+     color: rgb(233, 169, 92);
+     font-size: 50px;
+}
+li {
+    color: beige;
+    font-size: 22px;
+}
+h1{
+    color: #f6ad55;
+    font-size: 50px;
+    text-indent: -9999px;
+}
+header{
+
+    background-image: url(images/IMG_20260820_105803.png);
+    background-size: contain;
+    background-position: center;
+    
+}
+
+section a{
+    text-decoration: none;
+}
+section li{
+    display: inline;
+    margin-right: 4vw;
+}
+
+body{
+    margin:0 ;
+    min-height: 100vh;
+    background-image: url(images/qq_pic_merged_1787301000646.jpg);
+    background-position: center;
+    background-size: contain;
+    background-attachment: fixed;
+}
