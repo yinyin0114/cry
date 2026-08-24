@@ -3,1711 +3,919 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自然选择与进化模拟器</title>
+    <title>🌍 自然选择 · 进食增寿与颜色进化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
-            background: #1a1a2e;
-            color: #eee;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #2a2a4a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #4a4a8a;
-            border-radius: 3px;
-        }
-
-        .app-header {
-            background: #16213e;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-            border-bottom: 2px solid #0f3460;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .app-header h1 {
-            font-size: 20px;
-            color: #e94560;
-            letter-spacing: 2px;
-            font-weight: 700;
-            text-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
-        }
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-        .header-controls label {
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            color: #aaa;
-        }
-        .header-controls input[type="range"] {
-            width: 80px;
-            accent-color: #e94560;
-            cursor: pointer;
-        }
-        .header-controls input[type="color"] {
-            width: 30px;
-            height: 30px;
-            border: 2px solid #444;
-            border-radius: 4px;
-            cursor: pointer;
-            background: none;
-            padding: 0;
-        }
-        .btn {
-            padding: 5px 14px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: 0.2s;
-            background: #2a2a5a;
-            color: #eee;
-        }
-        .btn:hover {
-            transform: scale(1.05);
-            opacity: 0.9;
-        }
-        .btn-primary {
-            background: #e94560;
-            color: #fff;
-        }
-        .btn-primary:hover {
-            background: #c73a54;
-        }
-        .btn-success {
-            background: #2e8b57;
-            color: #fff;
-        }
-        .btn-danger {
-            background: #b22234;
-            color: #fff;
-        }
-
-        .main-area {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .panel {
-            background: #1a1a2e;
-            padding: 12px 16px;
-            overflow-y: auto;
-            flex-shrink: 0;
-            border-right: 1px solid #2a2a4a;
-            width: 340px;
-            min-width: 280px;
-        }
-        .panel::-webkit-scrollbar {
-            width: 4px;
-        }
-        .panel h3 {
-            font-size: 14px;
-            color: #e94560;
-            margin: 12px 0 6px 0;
-            border-bottom: 1px solid #2a2a4a;
-            padding-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .panel h3:first-child {
-            margin-top: 0;
-        }
-        .param-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px 12px;
-            padding: 4px 0;
-        }
-        .param-group label {
-            font-size: 12px;
-            color: #bbb;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .param-group label input,
-        .param-group label select {
-            width: 60px;
-            padding: 2px 4px;
-            border-radius: 3px;
-            border: 1px solid #444;
-            background: #222;
-            color: #eee;
-            font-size: 12px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        .param-group label input[type="number"] {
-            width: 56px;
-        }
-        .param-group label input[type="range"] {
-            width: 50px;
-            accent-color: #e94560;
-        }
-        .param-group .full {
-            grid-column: 1 / -1;
-        }
-        .param-group .hint {
-            font-size: 10px;
-            color: #666;
-            grid-column: 1 / -1;
-            margin-top: -2px;
-        }
-
-        .canvas-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #0a0a1a;
-            position: relative;
-            overflow: hidden;
-        }
-        .canvas-wrapper canvas {
-            display: block;
-            width: 100%;
-            flex: 1;
-            background: #1a2a3a;
-            cursor: crosshair;
-        }
-
-        .stats-bar {
-            display: flex;
-            gap: 16px;
-            padding: 6px 16px;
-            background: #111128;
-            border-top: 1px solid #2a2a4a;
-            font-size: 12px;
-            color: #aaa;
-            flex-shrink: 0;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .stats-bar .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .stats-bar .stat-item .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 2px;
-            display: inline-block;
-        }
-        .stats-bar .stat-item .dot.circle {
-            border-radius: 50%;
-        }
-        .stats-bar .stat-value {
-            color: #fff;
-            font-weight: 600;
-            min-width: 20px;
-        }
-        .stats-bar .stat-value.green {
-            color: #7bed9f;
-        }
-        .stats-bar .stat-value.red {
-            color: #ff6b6b;
-        }
-        .stats-bar .stat-value.blue {
-            color: #74b9ff;
-        }
-
-        .chart-container {
-            height: 120px;
-            background: #0d0d22;
-            border-top: 1px solid #2a2a4a;
-            flex-shrink: 0;
-            position: relative;
-        }
-        .chart-container canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        .event-toast {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
-            color: #ffd93d;
-            padding: 10px 28px;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 700;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.4s;
-            z-index: 10;
-            text-align: center;
-            border: 2px solid #ffd93d;
-            box-shadow: 0 0 40px rgba(255, 217, 61, 0.2);
-            backdrop-filter: blur(4px);
-        }
-        .event-toast.show {
-            opacity: 1;
-        }
-        .event-toast .sub {
-            font-size: 13px;
-            font-weight: 400;
-            color: #ccc;
-        }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-overlay.active {
-            display: flex;
-        }
-        .modal-box {
-            background: #1a1a2e;
-            border: 1px solid #3a3a6a;
-            border-radius: 12px;
-            padding: 24px 32px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .modal-box h2 {
-            color: #e94560;
-            margin-bottom: 12px;
-        }
-        .modal-box .close-btn {
-            float: right;
-            background: none;
-            border: none;
-            color: #aaa;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        @media (max-width: 900px) {
-            .main-area {
-                flex-direction: column;
-            }
-            .panel {
-                width: 100%;
-                max-height: 300px;
-                border-right: none;
-                border-bottom: 1px solid #2a2a4a;
-            }
-            .param-group {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        @media (max-width: 600px) {
-            .app-header h1 {
-                font-size: 16px;
-            }
-            .header-controls label {
-                font-size: 11px;
-            }
-            .panel {
-                padding: 8px 10px;
-                max-height: 200px;
-            }
-            .param-group {
-                grid-template-columns: 1fr;
-            }
-            .stats-bar {
-                font-size: 10px;
-                gap: 8px;
-            }
-        }
+        /* (样式省略，与之前完全一致) */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #1a1a1a; color: #e0e0e0; font-family: 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .container { max-width: 1600px; width: 100%; display: flex; flex-wrap: wrap; gap: 16px; }
+        .panel { background: #252525; border-radius: 12px; padding: 18px; border: 1px solid #3a3a3a; box-shadow: 0 6px 12px rgba(0,0,0,0.5); flex: 1 1 320px; min-width: 280px; max-height: 98vh; overflow-y: auto; }
+        .panel::-webkit-scrollbar { width: 6px; }
+        .panel::-webkit-scrollbar-thumb { background: #555; border-radius: 8px; }
+        h2 { font-size: 20px; margin-bottom: 14px; color: #8cf0b0; border-bottom: 1px solid #3a3a3a; padding-bottom: 8px; }
+        .param-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin-bottom: 16px; background: #2d2d2d; padding: 12px; border-radius: 8px; }
+        .param-group label { font-size: 13px; color: #bbb; display: flex; flex-direction: column; gap: 2px; }
+        .param-group input { background: #1a1a1a; border: 1px solid #444; color: #fff; padding: 5px 8px; border-radius: 6px; width: 100%; font-size: 13px; }
+        .param-group input:focus { outline: 1px solid #6fcf97; border-color: #6fcf97; }
+        .param-group .full { grid-column: span 2; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+        .btn { background: #3a3a3a; border: none; color: #fff; padding: 8px 18px; border-radius: 30px; cursor: pointer; font-weight: 600; transition: 0.2s; flex:1; min-width:70px; }
+        .btn:hover { background: #4e4e4e; transform: scale(1.02); }
+        .btn-primary { background: #2d7a4a; }
+        .btn-primary:hover { background: #3a9e5e; }
+        .btn-danger { background: #8a3a3a; }
+        .btn-danger:hover { background: #b14545; }
+        .btn-warning { background: #b88a2a; }
+        .btn-warning:hover { background: #dbaa3a; }
+        .btn-disaster { background: #7a3a6a; color: #fff; padding: 4px 12px; border-radius: 20px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; transition:0.2s; }
+        .btn-disaster:hover { background: #a54a8a; }
+        .status-bar { display: flex; flex-wrap: wrap; gap: 12px; font-size: 14px; background: #1f1f1f; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+        .status-item { display: flex; align-items: center; gap: 6px; }
+        .status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 4px; }
+        .slider-group { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+        .slider-group input { flex:1; }
+        .main-area { flex: 3 1 700px; display: flex; flex-direction: column; gap: 16px; }
+        .canvas-wrapper { background: #111; border-radius: 12px; border: 1px solid #333; position: relative; overflow: hidden; }
+        #simCanvas { display: block; width: 100%; height: auto; aspect-ratio: 16/9; background: #222; cursor: crosshair; }
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .chart-box { background: #1e1e1e; border-radius: 10px; padding: 10px; border: 1px solid #333; }
+        .chart-box h4 { font-size: 14px; margin-bottom: 6px; color: #aaa; }
+        .chart-box canvas { width: 100% !important; height: 120px !important; }
+        .event-log { background: #1a1a1a; border-radius: 8px; padding: 6px 12px; min-height: 32px; border-left: 4px solid #f0b34b; font-size: 14px; color: #f0d89a; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+        .event-log span { background: #2a2a2a; padding: 2px 10px; border-radius: 20px; }
+        .disaster-tag { background: #b33; color: #fff; padding: 0 8px; border-radius: 12px; font-weight: bold; margin-left: 8px; }
+        .disaster-control { display: flex; flex-wrap: wrap; gap: 8px 12px; background: #1f1f1f; padding: 10px; border-radius: 8px; margin-top: 8px; align-items: center; }
+        .disaster-control label { font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 4px; }
+        .disaster-control input[type="range"] { width: 60px; }
+        .disaster-control .btn-disaster { font-size: 11px; padding: 2px 12px; }
+        @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } .param-group { grid-template-columns: 1fr; } .param-group .full { grid-column: span 1; } }
     </style>
 </head>
 <body>
-
-    <div class="app-header">
-        <h1>🧬 自然选择 · 进化模拟</h1>
-        <div class="header-controls">
-            <label>⚡速率 <input type="range" id="speedSlider" min="0" max="5" step="0.2" value="1"> <span id="speedLabel">1.0x</span></label>
-            <label>🎨背景 <input type="color" id="bgColorPicker" value="#1a2a3a"></label>
-            <button class="btn btn-primary" id="pauseBtn">⏸️ 暂停</button>
-            <button class="btn btn-success" id="resetBtn">🔄 重置</button>
-            <button class="btn" id="configBtn" style="background:#3a3a6a;">⚙️ 参数</button>
+<div class="container">
+    <!-- 左侧面板 -->
+    <div class="panel">
+        <h2>🧬 进化 · 增寿与颜色</h2>
+        <div class="status-bar">
+            <div class="status-item"><span class="status-dot" style="background:#6fcf97;"></span> 采集者: <span id="preyCount">0</span></div>
+            <div class="status-item"><span class="status-dot" style="background:#eb5757;"></span> 捕猎者: <span id="predCount">0</span></div>
+            <div class="status-item">🍀 食物: <span id="foodCount">0</span></div>
+            <div class="status-item">⏱️ 代: <span id="genCount">0</span></div>
+            <div class="status-item" id="activeDisaster" style="color:#f2994a;">🌪️ 灾害: 无</div>
         </div>
+        <div class="slider-group">
+            <span style="font-size:13px;">🐢 模拟速率</span>
+            <input type="range" id="speedSlider" min="0" max="3" step="0.1" value="1.0">
+            <span id="speedLabel" style="min-width:36px;">1.0x</span>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-primary" id="startBtn">▶ 开始</button>
+            <button class="btn btn-warning" id="pauseBtn">⏸️ 暂停</button>
+            <button class="btn btn-danger" id="resetBtn">⟳ 重置</button>
+        </div>
+        <div style="margin:8px 0; display:flex; gap:8px; align-items:center;">
+            <label style="font-size:13px; color:#bbb;">🎨 环境背景</label>
+            <input type="color" id="bgColorPicker" value="#3a5a3a" style="width:40px;height:30px;border:none;background:none;cursor:pointer;">
+            <label style="font-size:13px; color:#bbb; margin-left:10px;">⚡ 环境压力系数</label>
+            <input type="range" id="pressureCoeff" min="0" max="2.5" step="0.1" value="1.0" style="flex:1; max-width:120px;">
+            <span id="pressureLabel" style="font-size:13px; min-width:32px;">1.0</span>
+        </div>
+        <div style="background:#1f1f1f; border-radius:8px; padding:10px; margin:8px 0; font-size:13px; color:#bbb;">
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <span>🌿 采集者: 大小 <input type="number" id="preySize" value="10" style="width:50px;"> 速度 <input type="number" id="preySpeed" value="1" step="0.1" style="width:50px;"></span>
+                <!-- 捕猎者速度默认值改为 1.5 -->
+                <span>🐾 捕猎者: 大小 <input type="number" id="predSize" value="20" style="width:50px;"> 速度 <input type="number" id="predSpeed" value="1.5" step="0.1" style="width:50px;"></span>
+            </div>
+        </div>
+        <details open>
+            <summary style="cursor:pointer;color:#8cf0b0;">⚙️ 高级参数</summary>
+            <div class="param-group">
+                <label>采集者数量 <input type="number" id="preyNum" value="25"></label>
+                <label>捕猎者数量 <input type="number" id="predNum" value="10"></label>
+                <label>采集者寿命(s) <input type="number" id="preyLife" value="20" step="0.5"></label>
+                <label>捕猎者寿命(s) <input type="number" id="predLife" value="20" step="0.5"></label>
+                <label style="color:#f0b34b;">🍽️ 采集者进食+寿命 <input type="number" id="preyFeedLifespan" value="2" step="0.5"></label>
+                <label style="color:#f0b34b;">🍽️ 捕猎者进食+寿命 <input type="number" id="predFeedLifespan" value="2" step="0.5"></label>
+                <label>捕猎接触时间(s) <input type="number" id="catchTime" value="0.1" step="0.01"></label>
+                <label>采集者大小上限 <input type="number" id="preyMaxSize" value="50"></label>
+                <label>捕猎者大小上限 <input type="number" id="predMaxSize" value="75"></label>
+                <label>采集者速度上限 <input type="number" id="preyMaxSpeed" value="10" step="0.5"></label>
+                <label>捕猎者速度上限 <input type="number" id="predMaxSpeed" value="10" step="0.5"></label>
+                <label class="full">采集者体积变化 <input type="text" id="preySizeRange" value="-5~5"></label>
+                <label class="full">采集者速度变化 <input type="text" id="preySpeedRange" value="-1.5~1.5"></label>
+                <label class="full">捕猎者体积变化 <input type="text" id="predSizeRange" value="-10~10"></label>
+                <label class="full">捕猎者速度变化 <input type="text" id="predSpeedRange" value="-1~1"></label>
+                <label>采集者分裂数 <input type="number" id="preySplit" value="2"></label>
+                <label>捕猎者分裂数 <input type="number" id="predSplit" value="2"></label>
+                <label>采集者分裂概率% <input type="number" id="preySplitProb" value="50"></label>
+                <label>捕猎者分裂概率% <input type="number" id="predSplitProb" value="50"></label>
+                <label>采集者变异概率% <input type="number" id="preyMutProb" value="5"></label>
+                <label>捕猎者变异概率% <input type="number" id="predMutProb" value="5"></label>
+                <label class="full">环境导向变异概率% <input type="number" id="envBiasProb" value="30"></label>
+                <label class="full" style="color:#f0b34b;">🍽️ 采集者分裂阈值(食物) <input type="number" id="preySplitThreshold" value="5"></label>
+                <label class="full" style="color:#f0b34b;">🍽️ 捕猎者分裂阈值(猎物) <input type="number" id="predSplitThreshold" value="3"></label>
+            </div>
+            <!-- 灾害控制区域 -->
+            <div style="background:#1f1f1f; border-radius:8px; padding:10px; margin-top:12px;">
+                <div style="font-size:14px; color:#f0b34b; margin-bottom:6px;">🌪️ 灾害概率乘数 (0~3) & 一键触发</div>
+                <div class="disaster-control">
+                    <label>🌾五谷 <input type="range" id="disasterMul0" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul0Val">1.0</span> <button class="btn-disaster" data-disaster="0">触发</button></label>
+                    <label>🌀骤变 <input type="range" id="disasterMul1" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul1Val">1.0</span> <button class="btn-disaster" data-disaster="1">触发</button></label>
+                    <label>📡伪装 <input type="range" id="disasterMul2" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul2Val">1.0</span> <button class="btn-disaster" data-disaster="2">触发</button></label>
+                    <label>🌋地震 <input type="range" id="disasterMul3" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul3Val">1.0</span> <button class="btn-disaster" data-disaster="3">触发</button></label>
+                    <label>☀️干旱 <input type="range" id="disasterMul4" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul4Val">1.0</span> <button class="btn-disaster" data-disaster="4">触发</button></label>
+                    <label>🦠瘟疫 <input type="range" id="disasterMul5" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul5Val">1.0</span> <button class="btn-disaster" data-disaster="5">触发</button></label>
+                    <label>❄️暴雪 <input type="range" id="disasterMul6" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul6Val">1.0</span> <button class="btn-disaster" data-disaster="6">触发</button></label>
+                    <label>⚡磁暴 <input type="range" id="disasterMul7" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul7Val">1.0</span> <button class="btn-disaster" data-disaster="7">触发</button></label>
+                </div>
+            </div>
+        </details>
+        <div class="event-log" id="eventLog">🌱 系统就绪，等待开始...</div>
     </div>
-
+    <!-- 右侧画布+图表 -->
     <div class="main-area">
-        <div class="panel" id="panel">
-            <h3>📊 状态</h3>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:#ccc;">
-                <span>⏱️ <span id="simTime">0.0</span>s</span>
-                <span>🧊 <span id="foodCount">0</span></span>
-                <span style="color:#7bed9f;">■ <span id="collectorCount">0</span></span>
-                <span style="color:#ff6b6b;">● <span id="predatorCount">0</span></span>
-                <span>📈 世代 <span id="genCount">0</span></span>
-            </div>
-
-            <h3>🧬 采集者 (方块)</h3>
-            <div class="param-group">
-                <label>大小 <input type="number" id="cSize" value="10" min="2" max="50"></label>
-                <label>速度 <input type="number" id="cSpeed" value="2" min="0.5" max="10" step="0.5"></label>
-                <label>数量 <input type="number" id="cCount" value="10" min="1" max="100"></label>
-                <label>血量 <input type="number" id="cHp" value="5" min="1" max="50"></label>
-                <label>每秒扣血 <input type="number" id="cHpDecay" value="2" min="0.1" max="10" step="0.1"></label>
-                <label>分裂数 <input type="number" id="cSplit" value="4" min="1" max="10"></label>
-                <label>分裂概率 <input type="number" id="cSplitProb" value="50" min="0" max="100">%</label>
-                <label>变异概率 <input type="number" id="cMutProb" value="5" min="0" max="100">%</label>
-                <label class="full">体积变化 <input type="text" id="cVolRange" value="-5~5" style="width:80px;"> 速度变化 <input type="text" id="cSpdRange" value="-3~3" style="width:80px;"></label>
-                <label class="full">回血 <input type="text" id="cHealRange" value="1~4" style="width:80px;"></label>
-            </div>
-
-            <h3>🔴 捕猎者 (圆球)</h3>
-            <div class="param-group">
-                <label>大小 <input type="number" id="pSize" value="20" min="2" max="80"></label>
-                <label>速度 <input type="number" id="pSpeed" value="1" min="0.3" max="8" step="0.5"></label>
-                <label>数量 <input type="number" id="pCount" value="2" min="0" max="30"></label>
-                <label>血量 <input type="number" id="pHp" value="10" min="1" max="80"></label>
-                <label>每秒扣血 <input type="number" id="pHpDecay" value="3" min="0.1" max="15" step="0.1"></label>
-                <label>分裂数 <input type="number" id="pSplit" value="2" min="1" max="8"></label>
-                <label>分裂概率 <input type="number" id="pSplitProb" value="50" min="0" max="100">%</label>
-                <label>变异概率 <input type="number" id="pMutProb" value="5" min="0" max="100">%</label>
-                <label class="full">体积变化 <input type="text" id="pVolRange" value="-10~10" style="width:80px;"> 速度变化 <input type="text" id="pSpdRange" value="-4~4" style="width:80px;"></label>
-                <label class="full">回血 <input type="text" id="pHealRange" value="1~4" style="width:80px;"></label>
-            </div>
-
-            <h3>⚔️ 捕食规则</h3>
-            <div class="param-group">
-                <label>接触时间 <input type="number" id="huntTime" value="0.1" min="0.01" max="2" step="0.01">s</label>
-                <label>每次扣血 <input type="number" id="huntDmg" value="5" min="0.5" max="50" step="0.5"></label>
-                <label>体型大额外扣 <input type="number" id="huntBonus" value="1" min="0" max="20" step="0.5"></label>
-            </div>
-
-            <h3>🌾 随机事件</h3>
-            <div style="font-size:12px;color:#888;padding:4px 0;">
-                <span>🌾五谷丰登 1% | ⚡闪电 0.5% | 🎭瞒天过海 0.1% (每秒)</span>
-            </div>
-            <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="btn btn-primary" id="eventHarvest" style="font-size:11px;padding:3px 10px;">🌾 触发丰收</button>
-                <button class="btn btn-danger" id="eventLightning" style="font-size:11px;padding:3px 10px;">⚡ 触发闪电</button>
-                <button class="btn" id="eventDeceive" style="font-size:11px;padding:3px 10px;background:#6c5ce7;">🎭 触发瞒天</button>
-            </div>
-        </div>
-
         <div class="canvas-wrapper">
-            <div class="event-toast" id="eventToast"></div>
-            <canvas id="simCanvas"></canvas>
-            <div class="stats-bar" id="statsBar">
-                <span class="stat-item"><span class="dot" style="background:#7bed9f;"></span> 采集者 <span class="stat-value green" id="sCollector">0</span></span>
-                <span class="stat-item"><span class="dot circle" style="background:#ff6b6b;"></span> 捕猎者 <span class="stat-value red" id="sPredator">0</span></span>
-                <span class="stat-item">🍎 食物 <span class="stat-value" id="sFood">0</span></span>
-                <span class="stat-item">⏱️ <span id="sTime">0.0</span>s</span>
-                <span class="stat-item">📈 世代 <span id="sGen">0</span></span>
-                <span class="stat-item" style="margin-left:auto;color:#888;font-size:11px;">拖拽画布移动视野</span>
-            </div>
-            <div class="chart-container">
-                <canvas id="chartCanvas"></canvas>
-            </div>
+            <canvas id="simCanvas" width="960" height="540"></canvas>
+        </div>
+        <div class="chart-grid">
+            <div class="chart-box"><h4>📈 进化轨迹 (亮度 & 色相)</h4><canvas id="trendChart"></canvas></div>
+            <div class="chart-box"><h4>🎯 选择压力 (色差 vs 寿命)</h4><canvas id="scatterChart"></canvas></div>
+            <div class="chart-box" style="grid-column: span 2;"><h4>📊 种群数量 & 平均大小</h4><canvas id="popChart"></canvas></div>
         </div>
     </div>
+</div>
+<script>
+(function(){
+    // ---------- DOM 引用 ----------
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = 960, H = 540;
+    canvas.width = W; canvas.height = H;
 
-    <!-- 参数配置模态框 -->
-    <div class="modal-overlay" id="configModal">
-        <div class="modal-box">
-            <button class="close-btn" id="modalClose">&times;</button>
-            <h2>⚙️ 完整参数配置</h2>
-            <div id="modalContent" style="font-size:13px;color:#ccc;">
-                <!-- 动态生成 -->
-            </div>
-            <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
-                <button class="btn btn-primary" id="modalApply">应用参数</button>
-                <button class="btn" id="modalClose2" style="background:#444;">关闭</button>
-            </div>
-        </div>
-    </div>
+    const $ = id => document.getElementById(id);
+    const preyNum = $('preyNum'), predNum = $('predNum');
+    const preySize = $('preySize'), preySpeed = $('preySpeed');
+    const predSize = $('predSize'), predSpeed = $('predSpeed');
+    const preyLife = $('preyLife'), predLife = $('predLife');
+    const preyFeedLifespan = $('preyFeedLifespan');
+    const predFeedLifespan = $('predFeedLifespan');
+    const catchTime = $('catchTime');
+    const preyMaxSize = $('preyMaxSize'), predMaxSize = $('predMaxSize');
+    const preyMaxSpeed = $('preyMaxSpeed'), predMaxSpeed = $('predMaxSpeed');
+    const preySizeRange = $('preySizeRange'), preySpeedRange = $('preySpeedRange');
+    const predSizeRange = $('predSizeRange'), predSpeedRange = $('predSpeedRange');
+    const preySplit = $('preySplit'), predSplit = $('predSplit');
+    const preySplitProb = $('preySplitProb'), predSplitProb = $('predSplitProb');
+    const preyMutProb = $('preyMutProb'), predMutProb = $('predMutProb');
+    const envBiasProb = $('envBiasProb');
+    const preySplitThreshold = $('preySplitThreshold');
+    const predSplitThreshold = $('predSplitThreshold');
+    const speedSlider = $('speedSlider'), speedLabel = $('speedLabel');
+    const bgColorPicker = $('bgColorPicker');
+    const pressureCoeff = $('pressureCoeff'), pressureLabel = $('pressureLabel');
+    const eventLog = $('eventLog');
+    const preyCountEl = $('preyCount'), predCountEl = $('predCount'), foodCountEl = $('foodCount'), genCountEl = $('genCount');
+    const activeDisasterEl = $('activeDisaster');
 
-    <script>
-        // ============================================================
-        //  自然选择与进化模拟器 - 核心逻辑
-        // ============================================================
-
-        // ---------- 工具函数 ----------
-        function rand(min, max) { return Math.random() * (max - min) + min; }
-
-        function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
-
-        function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-
-        function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
-
-        function colorDiff(c1, c2) {
-            // RGB 颜色差异 (0~1)
-            const r1 = (c1 >> 16) & 0xff,
-                g1 = (c1 >> 8) & 0xff,
-                b1 = c1 & 0xff;
-            const r2 = (c2 >> 16) & 0xff,
-                g2 = (c2 >> 8) & 0xff,
-                b2 = c2 & 0xff;
-            return Math.hypot(r1 - r2, g1 - g2, b1 - b2) / (255 * Math.sqrt(3));
+    // 灾害乘数输入
+    const disasterMulInputs = [];
+    for (let i=0; i<8; i++) {
+        const slider = document.getElementById('disasterMul'+i);
+        const val = document.getElementById('disasterMul'+i+'Val');
+        if (slider) {
+            slider.addEventListener('input', function() { val.textContent = parseFloat(this.value).toFixed(1); });
+            disasterMulInputs.push(slider);
         }
+    }
 
-        function hexToRgb(hex) {
-            const r = (hex >> 16) & 0xff,
-                g = (hex >> 8) & 0xff,
-                b = hex & 0xff;
-            return { r, g, b };
+    // ---------- 状态 ----------
+    let running = false, paused = false;
+    let simTime = 0;
+    let generation = 0;
+    let entities = [];
+    let foods = [];
+    let bgColor = { r: 58, g: 90, b: 58 };
+    let pressureFactor = 1.0;
+    let speedMul = 1.0;
+    let frameId = null;
+    let lastTimestamp = 0;
+
+    let disaster = { active: false, type: '', timer: 0, data: {} };
+
+    // 图表实例
+    let trendChart = null, scatterChart = null, popChart = null;
+    const MAX_HISTORY = 120;
+    const history = { time: [], bgLum: [], preyLum: [], predLum: [], preyHue: [], predHue: [], preyPop: [], predPop: [], preyAvgSize: [], predAvgSize: [] };
+    const scatterData = { x: [], y: [] };
+
+    // ---------- 工具函数 ----------
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+    function randInt(min, max) { return Math.floor(rand(min, max+1)); }
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function rgbToStr(r,g,b) { return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`; }
+    function colorDiff(c1, c2) {
+        return Math.sqrt((c1.r-c2.r)**2 + (c1.g-c2.g)**2 + (c1.b-c2.b)**2);
+    }
+    function lum(r,g,b) { return 0.299*r + 0.587*g + 0.114*b; }
+    function parseRange(str) {
+        let parts = str.split('~').map(s => parseFloat(s.trim()));
+        if(parts.length===2 && !isNaN(parts[0]) && !isNaN(parts[1])) return parts;
+        return [-1,1];
+    }
+    function randomColor() {
+        return { r: randInt(0,255), g: randInt(0,255), b: randInt(0,255) };
+    }
+    // RGB to Hue (0-360)
+    function rgbToHue(r,g,b) {
+        r/=255; g/=255; b/=255;
+        const max = Math.max(r,g,b), min = Math.min(r,g,b);
+        let h = 0;
+        if (max !== min) {
+            const d = max - min;
+            if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+            else if (max === g) h = ((b - r) / d + 2) / 6;
+            else if (max === b) h = ((r - g) / d + 4) / 6;
         }
+        return h * 360;
+    }
 
-        function rgbToHex(r, g, b) {
-            return ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+    // ---------- 实体类 ----------
+    class Entity {
+        constructor(type, x, y, size, speed, color, lifespan) {
+            this.type = type;
+            this.x = x; this.y = y;
+            this.size = size;
+            this.speed = speed;
+            this.color = color;
+            this.maxLifespan = lifespan;
+            this.lifespan = lifespan;
+            this.alive = true;
+            this.vx = rand(-0.5, 0.5);
+            this.vy = rand(-0.5, 0.5);
+            this.contactTimer = 0;
+            this.target = null;
+            this.health = 1.0;
+            this.children = 0;
+            this.feedCount = 0;
         }
+        get isPrey() { return this.type === 'prey'; }
+        get isPredator() { return this.type === 'predator'; }
+    }
 
-        function parseRange(str, defMin, defMax) {
-            // 解析 "a~b" 或 "a-b"
-            const m = String(str).match(/([-\d.]+)\s*[~\-]\s*([-\d.]+)/);
-            if (m) {
-                const a = parseFloat(m[1]),
-                    b = parseFloat(m[2]);
-                if (!isNaN(a) && !isNaN(b)) return { min: Math.min(a, b), max: Math.max(a, b) };
-            }
-            return { min: defMin, max: defMax };
-        }
-
-        function randomColor() {
-            return rgbToHex(randInt(50, 255), randInt(50, 255), randInt(50, 255));
-        }
-
-        function randomColorNear(hex, range) {
-            const { r, g, b } = hexToRgb(hex);
-            return rgbToHex(
-                clamp(r + randInt(-range, range), 20, 255),
-                clamp(g + randInt(-range, range), 20, 255),
-                clamp(b + randInt(-range, range), 20, 255)
-            );
-        }
-
-        // ---------- 配置系统 ----------
-        const CONFIG = {
-            // 采集者默认
-            cSize: 10,
-            cSpeed: 2,
-            cCount: 10,
-            cHp: 5,
-            cHpDecay: 2,
-            cSplit: 4,
-            cSplitProb: 50,
-            cMutProb: 5,
-            cVolRange: { min: -5, max: 5 },
-            cSpdRange: { min: -3, max: 3 },
-            cHealRange: { min: 1, max: 4 },
-            // 捕猎者默认
-            pSize: 20,
-            pSpeed: 1,
-            pCount: 2,
-            pHp: 10,
-            pHpDecay: 3,
-            pSplit: 2,
-            pSplitProb: 50,
-            pMutProb: 5,
-            pVolRange: { min: -10, max: 10 },
-            pSpdRange: { min: -4, max: 4 },
-            pHealRange: { min: 1, max: 4 },
-            // 捕食规则
-            huntTime: 0.1,
-            huntDmg: 5,
-            huntBonus: 1,
-            // 模拟
-            speed: 1,
-            bgColor: 0x1a2a3a,
-            paused: false,
-            // 事件触发 (外部)
-            triggerEvent: null,
+    // ---------- 初始化 / 重置 ----------
+    function parseParams() {
+        return {
+            preyNum: parseInt(preyNum.value) || 25,
+            predNum: parseInt(predNum.value) || 10,
+            preySize: parseFloat(preySize.value) || 10,
+            preySpeed: parseFloat(preySpeed.value) || 1,
+            // 捕猎者速度后备默认值改为 1.5
+            predSize: parseFloat(predSize.value) || 20,
+            predSpeed: parseFloat(predSpeed.value) || 1.5,
+            preyLife: parseFloat(preyLife.value) || 20,
+            predLife: parseFloat(predLife.value) || 20,
+            preyFeedLifespan: parseFloat(preyFeedLifespan.value) || 2,
+            predFeedLifespan: parseFloat(predFeedLifespan.value) || 2,
+            catchTime: parseFloat(catchTime.value) || 0.1,
+            preyMaxSize: parseFloat(preyMaxSize.value) || 50,
+            predMaxSize: parseFloat(predMaxSize.value) || 75,
+            preyMaxSpeed: parseFloat(preyMaxSpeed.value) || 10,
+            predMaxSpeed: parseFloat(predMaxSpeed.value) || 10,
+            preySizeRange: parseRange(preySizeRange.value),
+            preySpeedRange: parseRange(preySpeedRange.value),
+            predSizeRange: parseRange(predSizeRange.value),
+            predSpeedRange: parseRange(predSpeedRange.value),
+            preySplit: parseInt(preySplit.value) || 2,
+            predSplit: parseInt(predSplit.value) || 2,
+            preySplitProb: parseFloat(preySplitProb.value) / 100 || 0.5,
+            predSplitProb: parseFloat(predSplitProb.value) / 100 || 0.5,
+            preyMutProb: parseFloat(preyMutProb.value) / 100 || 0.05,
+            predMutProb: parseFloat(predMutProb.value) / 100 || 0.05,
+            envBiasProb: parseFloat(envBiasProb.value) / 100 || 0.3,
+            preySplitThreshold: parseInt(preySplitThreshold.value) || 5,
+            predSplitThreshold: parseInt(predSplitThreshold.value) || 3,
         };
+    }
 
-        // ---------- 全局状态 ----------
-        let collectors = [];
-        let predators = [];
-        let foods = [];
-        let simTime = 0;
-        let generation = 0;
-        let frameCount = 0;
-        let huntTimers = new Map(); // key: predator.id, value: {targetId, elapsed}
-        let deceivedUntil = 0; // 瞒天过海结束时间
-        let deceivedCamp = null; // 'collector' | 'predator'
-        let lightningZones = []; // {x, y, radius, endTime}
-        let chartData = { time: [], collectorAvgSize: [], predatorAvgSize: [], collectorCount: [], predatorCount: [] };
-        let chartMaxPoints = 200;
+    function resetSim() {
+        if (frameId) { cancelAnimationFrame(frameId); frameId=null; }
+        running = false; paused = false;
+        document.getElementById('startBtn').textContent = '▶ 开始';
+        const p = parseParams();
+        entities = [];
+        foods = [];
+        simTime = 0; generation = 0;
+        disaster.active = false; disaster.type = ''; disaster.timer = 0;
+        bgColor = { r: randInt(40,200), g: randInt(40,200), b: randInt(40,200) };
+        bgColorPicker.value = rgbToStr(bgColor.r, bgColor.g, bgColor.b);
+        for (let i=0; i<p.preyNum; i++) {
+            const c = randomColor();
+            entities.push(new Entity('prey', rand(20,W-20), rand(20,H-20), p.preySize, p.preySpeed, c, p.preyLife));
+        }
+        for (let i=0; i<p.predNum; i++) {
+            const c = randomColor();
+            entities.push(new Entity('predator', rand(20,W-20), rand(20,H-20), p.predSize, p.predSpeed, c, p.predLife));
+        }
+        for (let i=0; i<p.preyNum*5; i++) {
+            foods.push({ x: rand(10,W-10), y: rand(10,H-10), r: 4 });
+        }
+        Object.keys(history).forEach(k => history[k]=[]);
+        scatterData.x = []; scatterData.y = [];
+        updateCharts(true);
+        updateUI();
+        eventLog.innerHTML = '🌱 已重置，点击“开始”运行';
+        activeDisasterEl.innerHTML = '🌪️ 灾害: 无';
+        draw();
+    }
 
-        // 个体ID生成
-        let nextId = 1;
-
-        // DOM引用
-        const canvas = document.getElementById('simCanvas');
-        const ctx = canvas.getContext('2d');
-        const chartCanvas = document.getElementById('chartCanvas');
-        const chartCtx = chartCanvas.getContext('2d');
-
-        // 视野控制
-        let viewOffsetX = 0,
-            viewOffsetY = 0;
-        let isDragging = false,
-            dragStartX = 0,
-            dragStartY = 0,
-            dragOffsetX = 0,
-            dragOffsetY = 0;
-
-        // ---------- 实体类 ----------
-        class Creature {
-            constructor(type, x, y, size, speed, hp, color) {
-                this.id = nextId++;
-                this.type = type; // 'collector' | 'predator'
-                this.x = x;
-                this.y = y;
-                this.size = size;
-                this.speed = speed;
-                this.hp = hp;
-                this.maxHp = hp;
-                this.color = color || randomColor();
-                this.targetX = null;
-                this.targetY = null;
-                this.foodEaten = 0;
-                this.splitCount = 0;
-                this.alive = true;
-                this.huntContact = 0; // 捕猎者接触采集者的累计时间
-                this.huntTarget = null;
-                this.deceiveColor = null; // 瞒天过海时临时颜色
-                this.deceiveEnd = 0;
+    // ---------- 灾害触发函数 ----------
+    function triggerDisaster(typeIndex) {
+        const p = parseParams();
+        const msg = ['🌾 五谷丰登!', '🌀 环境骤变!', '📡 伪装失效!', '🌋 地震!', '☀️ 干旱!', '🦠 瘟疫!', '❄️ 暴风雪!', '⚡ 磁暴!'];
+        switch(typeIndex) {
+            case 0: {
+                const cnt = entities.filter(e => e.isPrey && e.alive).length;
+                for (let i=0; i<cnt; i++) foods.push({ x: rand(20,W-20), y: rand(20,H-20), r: 4 });
+                eventLog.innerHTML = msg[0] + ' +' + cnt + ' 食物';
+                break;
             }
-
-            get displayColor() {
-                if (this.deceiveEnd > simTime && this.deceiveColor !== null) {
-                    return this.deceiveColor;
+            case 1: {
+                const shift = 40;
+                bgColor.r = clamp(bgColor.r + rand(-shift, shift), 10, 245);
+                bgColor.g = clamp(bgColor.g + rand(-shift, shift), 10, 245);
+                bgColor.b = clamp(bgColor.b + rand(-shift, shift), 10, 245);
+                bgColorPicker.value = rgbToStr(bgColor.r, bgColor.g, bgColor.b);
+                eventLog.innerHTML = msg[1];
+                break;
+            }
+            case 2: {
+                for (let e of entities) {
+                    if (e.alive) {
+                        const inv = { r: 255-bgColor.r, g: 255-bgColor.g, b: 255-bgColor.b };
+                        e.color = { r: clamp(e.color.r + inv.r*0.4,0,255), g: clamp(e.color.g + inv.g*0.4,0,255), b: clamp(e.color.b + inv.b*0.4,0,255) };
+                    }
                 }
-                return this.color;
+                eventLog.innerHTML = msg[2];
+                break;
             }
-
-            takeDamage(dmg) {
-                this.hp -= dmg;
-                if (this.hp <= 0) { this.hp = 0;
-                    this.alive = false; }
-            }
-
-            heal(amount) {
-                this.hp = Math.min(this.maxHp, this.hp + amount);
-            }
-
-            isInLightningZone() {
-                for (const zone of lightningZones) {
-                    if (dist(this, zone) < zone.radius) return true;
+            case 3: {
+                for (let e of entities) {
+                    if (e.alive) {
+                        e.x += rand(-25, 25);
+                        e.y += rand(-25, 25);
+                        e.vx += rand(-0.5, 0.5);
+                        e.vy += rand(-0.5, 0.5);
+                        e.x = clamp(e.x, 5, W-5);
+                        e.y = clamp(e.y, 5, H-5);
+                    }
                 }
-                return false;
+                eventLog.innerHTML = msg[3];
+                break;
+            }
+            case 4: {
+                const remove = Math.floor(foods.length * 0.5);
+                foods.splice(0, remove);
+                eventLog.innerHTML = msg[4];
+                break;
+            }
+            case 5: {
+                for (let e of entities) {
+                    if (e.alive) {
+                        e.lifespan -= e.maxLifespan * 0.25;
+                        if (e.lifespan < 0) e.alive = false;
+                    }
+                }
+                eventLog.innerHTML = msg[5];
+                break;
+            }
+            case 6: {
+                if (disaster.active && disaster.type === '暴风雪') {
+                    disaster.timer = 5.0;
+                } else {
+                    if (disaster.active && disaster.type === '暴风雪') {
+                        for (let e of entities) if (e.alive) e.speed *= 2;
+                    }
+                    disaster.active = true;
+                    disaster.type = '暴风雪';
+                    disaster.timer = 5.0;
+                    for (let e of entities) if (e.alive) e.speed *= 0.5;
+                    activeDisasterEl.innerHTML = '❄️ 灾害: 暴风雪 (减速)';
+                }
+                eventLog.innerHTML = msg[6] + ' 持续5秒';
+                break;
+            }
+            case 7: {
+                for (let e of entities) {
+                    if (e.alive) {
+                        const shift = 40;
+                        e.color.r = clamp(e.color.r + randInt(-shift, shift), 0, 255);
+                        e.color.g = clamp(e.color.g + randInt(-shift, shift), 0, 255);
+                        e.color.b = clamp(e.color.b + randInt(-shift, shift), 0, 255);
+                    }
+                }
+                eventLog.innerHTML = msg[7];
+                break;
+            }
+        }
+    }
+
+    // ---------- 更新逻辑 ----------
+    function updateSim(dt) {
+        if (paused || !running) return;
+        const p = parseParams();
+        const pressure = parseFloat(pressureCoeff.value) || 1.0;
+        pressureLabel.textContent = pressure.toFixed(1);
+        const speed = parseFloat(speedSlider.value) || 1.0;
+        speedLabel.textContent = speed.toFixed(1) + 'x';
+        const dtEff = dt * speed;
+        simTime += dtEff;
+
+        // 处理持续灾害
+        if (disaster.active) {
+            disaster.timer -= dtEff;
+            if (disaster.timer <= 0) {
+                disaster.active = false;
+                if (disaster.type === '暴风雪') {
+                    for (let e of entities) if (e.alive) e.speed *= 2;
+                }
+                disaster.type = '';
+                activeDisasterEl.innerHTML = '🌪️ 灾害: 无';
             }
         }
 
-        // ---------- 初始化 ----------
-        function initSimulation() {
-            collectors = [];
-            predators = [];
-            foods = [];
-            huntTimers = new Map();
-            lightningZones = [];
-            deceivedUntil = 0;
-            deceivedCamp = null;
-            simTime = 0;
-            generation = 0;
-            frameCount = 0;
-            chartData = { time: [], collectorAvgSize: [], predatorAvgSize: [], collectorCount: [], predatorCount: [] };
-            nextId = 1;
-
-            const W = canvas.width,
-                H = canvas.height;
-
-            // 生成采集者
-            for (let i = 0; i < CONFIG.cCount; i++) {
-                const c = new Creature('collector',
-                    rand(30, W - 30), rand(30, H - 30),
-                    CONFIG.cSize,
-                    CONFIG.cSpeed,
-                    CONFIG.cHp,
-                    randomColor()
-                );
-                collectors.push(c);
-            }
-
-            // 生成捕猎者
-            for (let i = 0; i < CONFIG.pCount; i++) {
-                const p = new Creature('predator',
-                    rand(30, W - 30), rand(30, H - 30),
-                    CONFIG.pSize,
-                    CONFIG.pSpeed,
-                    CONFIG.pHp,
-                    randomColor()
-                );
-                predators.push(p);
-            }
-
-            // 初始食物
-            for (let i = 0; i < CONFIG.cCount * 2; i++) {
-                spawnFood();
-            }
-
-            updateStats();
-            updateChart();
+        // 环境漂移
+        if (simTime % 5 < dtEff) {
+            bgColor.r = clamp(bgColor.r + rand(-2,2), 20, 235);
+            bgColor.g = clamp(bgColor.g + rand(-2,2), 20, 235);
+            bgColor.b = clamp(bgColor.b + rand(-2,2), 20, 235);
+            bgColorPicker.value = rgbToStr(bgColor.r, bgColor.g, bgColor.b);
         }
 
-        function spawnFood() {
-            const W = canvas.width,
-                H = canvas.height;
-            foods.push({
-                x: rand(10, W - 10),
-                y: rand(10, H - 10),
-                size: 3 + rand(0, 2),
-                alive: true
-            });
+        // 随机灾害
+        const baseProb = dtEff * 10;
+        const mul0 = parseFloat(disasterMulInputs[0]?.value || 1);
+        const mul1 = parseFloat(disasterMulInputs[1]?.value || 1);
+        const mul2 = parseFloat(disasterMulInputs[2]?.value || 1);
+        const mul3 = parseFloat(disasterMulInputs[3]?.value || 1);
+        const mul4 = parseFloat(disasterMulInputs[4]?.value || 1);
+        const mul5 = parseFloat(disasterMulInputs[5]?.value || 1);
+        const mul6 = parseFloat(disasterMulInputs[6]?.value || 1);
+        const mul7 = parseFloat(disasterMulInputs[7]?.value || 1);
+
+        if (Math.random() < 0.01 * baseProb * mul0) {
+            const cnt = entities.filter(e => e.isPrey && e.alive).length;
+            for (let i=0; i<cnt; i++) foods.push({ x: rand(20,W-20), y: rand(20,H-20), r: 4 });
+            eventLog.innerHTML = '🌾 五谷丰登! +' + cnt + ' 食物';
+        }
+        if (Math.random() < 0.005 * baseProb * mul1) {
+            const shift = 40;
+            bgColor.r = clamp(bgColor.r + rand(-shift, shift), 10, 245);
+            bgColor.g = clamp(bgColor.g + rand(-shift, shift), 10, 245);
+            bgColor.b = clamp(bgColor.b + rand(-shift, shift), 10, 245);
+            bgColorPicker.value = rgbToStr(bgColor.r, bgColor.g, bgColor.b);
+            eventLog.innerHTML = '🌀 环境骤变!';
+        }
+        if (Math.random() < 0.002 * baseProb * mul2) {
+            for (let e of entities) {
+                if (e.alive) {
+                    const inv = { r: 255-bgColor.r, g: 255-bgColor.g, b: 255-bgColor.b };
+                    e.color = { r: clamp(e.color.r + inv.r*0.4,0,255), g: clamp(e.color.g + inv.g*0.4,0,255), b: clamp(e.color.b + inv.b*0.4,0,255) };
+                }
+            }
+            eventLog.innerHTML = '📡 伪装失效!';
+        }
+        if (Math.random() < 0.002 * baseProb * mul3) {
+            for (let e of entities) {
+                if (e.alive) {
+                    e.x += rand(-25, 25);
+                    e.y += rand(-25, 25);
+                    e.vx += rand(-0.5, 0.5);
+                    e.vy += rand(-0.5, 0.5);
+                    e.x = clamp(e.x, 5, W-5);
+                    e.y = clamp(e.y, 5, H-5);
+                }
+            }
+            eventLog.innerHTML = '🌋 地震!';
+        }
+        if (Math.random() < 0.003 * baseProb * mul4) {
+            const remove = Math.floor(foods.length * 0.5);
+            foods.splice(0, remove);
+            eventLog.innerHTML = '☀️ 干旱!';
+        }
+        if (Math.random() < 0.0015 * baseProb * mul5) {
+            for (let e of entities) {
+                if (e.alive) {
+                    e.lifespan -= e.maxLifespan * 0.25;
+                    if (e.lifespan < 0) e.alive = false;
+                }
+            }
+            eventLog.innerHTML = '🦠 瘟疫!';
+        }
+        if (Math.random() < 0.002 * baseProb * mul6 && !disaster.active) {
+            disaster.active = true;
+            disaster.type = '暴风雪';
+            disaster.timer = 5.0;
+            for (let e of entities) if (e.alive) e.speed *= 0.5;
+            eventLog.innerHTML = '❄️ 暴风雪!';
+            activeDisasterEl.innerHTML = '❄️ 灾害: 暴风雪 (减速)';
+        }
+        if (Math.random() < 0.0015 * baseProb * mul7) {
+            for (let e of entities) {
+                if (e.alive) {
+                    const shift = 40;
+                    e.color.r = clamp(e.color.r + randInt(-shift, shift), 0, 255);
+                    e.color.g = clamp(e.color.g + randInt(-shift, shift), 0, 255);
+                    e.color.b = clamp(e.color.b + randInt(-shift, shift), 0, 255);
+                }
+            }
+            eventLog.innerHTML = '⚡ 磁暴!';
         }
 
-        // ---------- 行为逻辑 ----------
-        function updateCollectors(dt) {
-            const W = canvas.width,
-                H = canvas.height;
-            const bgColor = CONFIG.bgColor;
+        // ---- 移动与AI ----
+        const preyList = entities.filter(e => e.isPrey && e.alive);
+        const predList = entities.filter(e => e.isPredator && e.alive);
 
-            // 每个采集者
-            for (const c of collectors) {
-                if (!c.alive) continue;
-
-                // 扣血
-                c.hp -= CONFIG.cHpDecay * dt;
-                if (c.hp <= 0) { c.alive = false; continue; }
-
-                // 闪电区域效果
-                if (c.isInLightningZone()) {
-                    c.hp -= CONFIG.cHpDecay * dt * 2; // 翻倍扣血
-                    c.speed = Math.max(0.3, c.speed * 0.5); // 速度减半 (实际会慢慢恢复，但这里持续影响)
-                }
-
-                // 寻找最近的食物
-                let nearestFood = null;
-                let nearDist = Infinity;
-                for (const f of foods) {
-                    if (!f.alive) continue;
-                    const d = dist(c, f);
-                    if (d < nearDist) { nearDist = d;
-                        nearestFood = f; }
-                }
-
-                // 寻找最近的捕猎者 (用于躲避)
-                let nearestPred = null;
-                let predDist = Infinity;
-                for (const p of predators) {
-                    if (!p.alive) continue;
-                    const d = dist(c, p);
-                    if (d < predDist) { predDist = d;
-                        nearestPred = p; }
-                }
-
-                // 决策：躲避捕猎者 or 寻找食物
-                let moveX = 0,
-                    moveY = 0;
-                const dangerRadius = c.size * 3 + 20;
-                const fleeStrength = 1.0;
-
-                if (nearestPred && predDist < dangerRadius) {
-                    // 躲避捕猎者 - 优先考虑与背景颜色差异大的捕猎者
-                    const diff = colorDiff(nearestPred.displayColor, bgColor);
-                    const weight = 0.5 + diff * 0.5;
-                    const angle = Math.atan2(c.y - nearestPred.y, c.x - nearestPred.x);
-                    const force = fleeStrength * weight * (1 - predDist / dangerRadius);
-                    moveX += Math.cos(angle) * force * c.speed * 0.8;
-                    moveY += Math.sin(angle) * force * c.speed * 0.8;
-                }
-
-                // 趋向食物
-                if (nearestFood && nearDist < 300) {
-                    const angle = Math.atan2(nearestFood.y - c.y, nearestFood.x - c.x);
-                    const force = 0.6 * (1 - Math.min(nearDist / 300, 1));
-                    moveX += Math.cos(angle) * force * c.speed;
-                    moveY += Math.sin(angle) * force * c.speed;
-                }
-
-                // 随机漫游
-                if (Math.random() < 0.02) {
-                    moveX += rand(-1, 1) * c.speed * 0.3;
-                    moveY += rand(-1, 1) * c.speed * 0.3;
-                }
-
-                // 边界弹性
-                const margin = 20;
-                if (c.x < margin) moveX += c.speed * 0.5;
-                if (c.x > W - margin) moveX -= c.speed * 0.5;
-                if (c.y < margin) moveY += c.speed * 0.5;
-                if (c.y > H - margin) moveY -= c.speed * 0.5;
-
-                // 归一化速度
-                const spd = Math.hypot(moveX, moveY);
-                if (spd > c.speed) {
-                    moveX = (moveX / spd) * c.speed;
-                    moveY = (moveY / spd) * c.speed;
-                }
-
-                // 移动
-                c.x += moveX * dt * 60;
-                c.y += moveY * dt * 60;
-
-                // 边界限制
-                c.x = clamp(c.x, 5, W - 5);
-                c.y = clamp(c.y, 5, H - 5);
-
-                // 吃食物
-                for (const f of foods) {
-                    if (!f.alive) continue;
-                    if (dist(c, f) < c.size + f.size) {
-                        f.alive = false;
-                        // 回血
-                        const healAmt = rand(CONFIG.cHealRange.min, CONFIG.cHealRange.max);
-                        c.heal(healAmt);
-                        c.foodEaten++;
-
-                        // 体积速度变化
-                        const volDelta = rand(CONFIG.cVolRange.min, CONFIG.cVolRange.max);
-                        const spdDelta = rand(CONFIG.cSpdRange.min, CONFIG.cSpdRange.max);
-                        // 若体积增大则速度减小，若体积减小则速度增大
-                        const newSize = Math.max(2, c.size + volDelta);
-                        const sizeRatio = newSize / c.size;
-                        // 速度反向变化
-                        const newSpeed = Math.max(0.3, c.speed + (volDelta > 0 ? -Math.abs(spdDelta) * 0.3 : Math.abs(
-                            spdDelta) * 0.3));
-                        c.size = newSize;
-                        c.speed = clamp(newSpeed, 0.3, 15);
-
-                        // 分裂
-                        const splitProb = CONFIG.cSplitProb / 100;
-                        if (Math.random() < splitProb) {
-                            const numSplit = CONFIG.cSplit;
-                            for (let i = 0; i < numSplit; i++) {
-                                if (collectors.length > CONFIG.cCount * 12) break;
-                                const child = new Creature('collector',
-                                    c.x + rand(-20, 20), c.y + rand(-20, 20),
-                                    c.size * (0.7 + rand(0, 0.6)),
-                                    c.speed * (0.7 + rand(0, 0.6)),
-                                    c.maxHp * 0.6 + rand(0, c.maxHp * 0.4),
-                                    c.color
-                                );
-                                // 变异
-                                if (Math.random() < CONFIG.cMutProb / 100) {
-                                    child.color = randomColorNear(c.color, 60);
-                                    child.size *= (0.8 + rand(0, 0.4));
-                                    child.speed *= (0.8 + rand(0, 0.4));
-                                    child.maxHp *= (0.8 + rand(0, 0.4));
-                                    child.hp = child.maxHp;
-                                }
-                                // 颜色继承+变异
-                                if (Math.random() < 0.3) child.color = randomColorNear(c.color, 30);
-                                collectors.push(child);
-                                generation++;
-                            }
+        for (let e of preyList) {
+            let nearFood = null, nearDist = 120;
+            for (let f of foods) {
+                const d = Math.hypot(e.x-f.x, e.y-f.y);
+                if (d < nearDist) { nearDist = d; nearFood = f; }
+            }
+            let nearPred = null, predDist = 150;
+            for (let pr of predList) {
+                const d = Math.hypot(e.x-pr.x, e.y-pr.y);
+                if (d < predDist) { predDist = d; nearPred = pr; }
+            }
+            let ax=0, ay=0;
+            if (nearFood) { ax += (nearFood.x - e.x)*0.04; ay += (nearFood.y - e.y)*0.04; }
+            if (nearPred) { 
+                const diff = colorDiff(e.color, bgColor);
+                const fear = clamp(diff/255 * pressure, 0.1, 2.0);
+                ax -= (nearPred.x - e.x)*0.05 * fear;
+                ay -= (nearPred.y - e.y)*0.05 * fear;
+            }
+            e.vx += ax; e.vy += ay;
+            const spd = Math.hypot(e.vx, e.vy);
+            const maxSpd = e.speed * 1.8;
+            if (spd > maxSpd) { e.vx = (e.vx/spd)*maxSpd; e.vy = (e.vy/spd)*maxSpd; }
+            e.x += e.vx * dtEff * 40; e.y += e.vy * dtEff * 40;
+            if (e.x < 5) e.x=5; if (e.x > W-5) e.x=W-5;
+            if (e.y < 5) e.y=5; if (e.y > H-5) e.y=H-5;
+            if (e.x<10 || e.x>W-10) e.vx *= -0.5;
+            if (e.y<10 || e.y>H-10) e.vy *= -0.5;
+            // 吃食物
+            for (let i=foods.length-1; i>=0; i--) {
+                const f = foods[i];
+                if (Math.hypot(e.x-f.x, e.y-f.y) < e.size/2 + f.r) {
+                    const sizeDelta = rand(p.preySizeRange[0], p.preySizeRange[1]);
+                    const speedDelta = rand(p.preySpeedRange[0], p.preySpeedRange[1]);
+                    e.size = clamp(e.size + sizeDelta, 2, p.preyMaxSize);
+                    e.speed = clamp(e.speed - sizeDelta * 0.1 + speedDelta * 0.2, 0.2, p.preyMaxSpeed);
+                    if (sizeDelta > 0) e.speed = clamp(e.speed - sizeDelta*0.05, 0.2, p.preyMaxSpeed);
+                    else e.speed = clamp(e.speed + Math.abs(sizeDelta)*0.05, 0.2, p.preyMaxSpeed);
+                    const addLife = p.preyFeedLifespan;
+                    e.maxLifespan += addLife;
+                    e.lifespan += addLife;
+                    foods.splice(i, 1);
+                    e.feedCount++;
+                    if (e.feedCount >= p.preySplitThreshold) {
+                        if (Math.random() < p.preySplitProb) {
+                            splitEntity(e, 'prey', p);
                         }
-                        break;
+                        e.feedCount = 0;
                     }
                 }
-
-                // 被捕猎者吃掉 (由捕猎者逻辑处理)
             }
-
-            // 清理死亡采集者
-            collectors = collectors.filter(c => c.alive);
-
-            // 强制斩杀 (超过初始数量10倍)
-            const maxCollectors = CONFIG.cCount * 10;
-            if (collectors.length > maxCollectors) {
-                collectors.sort((a, b) => a.hp - b.hp);
-                const killCount = Math.floor((collectors.length - maxCollectors) * 0.5);
-                for (let i = 0; i < killCount && i < collectors.length; i++) {
-                    collectors[i].alive = false;
-                }
-                collectors = collectors.filter(c => c.alive);
-            }
+            const diff = colorDiff(e.color, bgColor);
+            const normDiff = clamp(diff / 255, 0, 1);
+            e.lifespan -= dtEff * (1 + normDiff * pressure * 1.5);
+            if (e.lifespan <= 0) e.alive = false;
         }
 
-        function updatePredators(dt) {
-            const W = canvas.width,
-                H = canvas.height;
-            const bgColor = CONFIG.bgColor;
-
-            for (const p of predators) {
-                if (!p.alive) continue;
-
-                // 扣血
-                p.hp -= CONFIG.pHpDecay * dt;
-                if (p.hp <= 0) { p.alive = false; continue; }
-
-                // 闪电区域效果
-                if (p.isInLightningZone()) {
-                    p.hp -= CONFIG.pHpDecay * dt * 2;
-                    p.speed = Math.max(0.3, p.speed * 0.5);
-                }
-
-                // 寻找最近的采集者 - 优先选择与背景颜色差异大的
-                let target = null;
-                let targetDist = Infinity;
-                let bestDiff = -1;
-                for (const c of collectors) {
-                    if (!c.alive) continue;
-                    const d = dist(p, c);
-                    const diff = colorDiff(c.displayColor, bgColor);
-                    // 综合评分: 距离近 + 颜色差异大
-                    const score = d / (0.5 + diff * 0.5);
-                    if (score < targetDist) {
-                        targetDist = d;
-                        target = c;
-                        bestDiff = diff;
-                    }
-                }
-
-                // 移动
-                let moveX = 0,
-                    moveY = 0;
-                if (target) {
-                    const angle = Math.atan2(target.y - p.y, target.x - p.x);
-                    const force = Math.min(1, 200 / (targetDist + 20));
-                    moveX = Math.cos(angle) * p.speed * force;
-                    moveY = Math.sin(angle) * p.speed * force;
-
-                    // 如果捕猎者比采集者大很多，增加追捕意愿
-                    if (p.size > target.size * 1.5) {
-                        moveX *= 1.2;
-                        moveY *= 1.2;
-                    }
-
-                    // 捕猎接触
-                    if (targetDist < p.size + target.size) {
-                        p.huntContact += dt;
-                        // 检查是否达到捕食时间
-                        if (p.huntContact >= CONFIG.huntTime) {
-                            // 捕食成功
-                            const dmg = CONFIG.huntDmg + (target.size > p.size ? CONFIG.huntBonus : 0);
-                            target.takeDamage(dmg);
-                            p.huntContact = 0;
-                            // 捕猎者回血
-                            const healAmt = rand(CONFIG.pHealRange.min, CONFIG.pHealRange.max);
-                            p.heal(healAmt);
-                            p.foodEaten++;
-
-                            // 捕猎者体积速度变化
-                            const volDelta = rand(CONFIG.pVolRange.min, CONFIG.pVolRange.max);
-                            const spdDelta = rand(CONFIG.pSpdRange.min, CONFIG.pSpdRange.max);
-                            const newSize = Math.max(3, p.size + volDelta);
-                            const newSpeed = Math.max(0.3, p.speed + (volDelta > 0 ? -Math.abs(spdDelta) * 0.3 : Math.abs(
-                                spdDelta) * 0.3));
-                            p.size = newSize;
-                            p.speed = clamp(newSpeed, 0.3, 12);
-
-                            // 分裂
-                            if (Math.random() < CONFIG.pSplitProb / 100) {
-                                const numSplit = CONFIG.pSplit;
-                                for (let i = 0; i < numSplit; i++) {
-                                    if (predators.length > CONFIG.pCount * 12) break;
-                                    const child = new Creature('predator',
-                                        p.x + rand(-25, 25), p.y + rand(-25, 25),
-                                        p.size * (0.7 + rand(0, 0.6)),
-                                        p.speed * (0.7 + rand(0, 0.6)),
-                                        p.maxHp * 0.6 + rand(0, p.maxHp * 0.4),
-                                        p.color
-                                    );
-                                    if (Math.random() < CONFIG.pMutProb / 100) {
-                                        child.color = randomColorNear(p.color, 60);
-                                        child.size *= (0.8 + rand(0, 0.4));
-                                        child.speed *= (0.8 + rand(0, 0.4));
-                                        child.maxHp *= (0.8 + rand(0, 0.4));
-                                        child.hp = child.maxHp;
-                                    }
-                                    if (Math.random() < 0.3) child.color = randomColorNear(p.color, 30);
-                                    predators.push(child);
-                                    generation++;
-                                }
+        for (let e of predList) {
+            let target = null, tDist = 250;
+            for (let prey of preyList) {
+                if (!prey.alive) continue;
+                const diff = colorDiff(prey.color, bgColor);
+                const detectRange = 150 + diff * 0.4;
+                const d = Math.hypot(e.x-prey.x, e.y-prey.y);
+                if (d < detectRange && d < tDist) { tDist = d; target = prey; }
+            }
+            if (target) {
+                const dx = target.x - e.x, dy = target.y - e.y;
+                const d = Math.hypot(dx,dy);
+                if (d>1) { e.vx += (dx/d)*0.08; e.vy += (dy/d)*0.08; }
+                if (d < (e.size/2 + target.size/2)) {
+                    e.contactTimer += dtEff;
+                    if (e.contactTimer >= p.catchTime) {
+                        const sizeDelta = rand(p.predSizeRange[0], p.predSizeRange[1]);
+                        const speedDelta = rand(p.predSpeedRange[0], p.predSpeedRange[1]);
+                        e.size = clamp(e.size + sizeDelta, 3, p.predMaxSize);
+                        e.speed = clamp(e.speed - sizeDelta*0.05 + speedDelta*0.2, 0.2, p.predMaxSpeed);
+                        if (sizeDelta > 0) e.speed = clamp(e.speed - sizeDelta*0.04, 0.2, p.predMaxSpeed);
+                        else e.speed = clamp(e.speed + Math.abs(sizeDelta)*0.04, 0.2, p.predMaxSpeed);
+                        const addLife = p.predFeedLifespan;
+                        e.maxLifespan += addLife;
+                        e.lifespan += addLife;
+                        target.alive = false;
+                        e.contactTimer = 0;
+                        e.feedCount++;
+                        if (e.feedCount >= p.predSplitThreshold) {
+                            if (Math.random() < p.predSplitProb) {
+                                splitEntity(e, 'predator', p);
                             }
-
-                            if (!target.alive) {
-                                // 采集者死亡，清除捕猎接触记录
-                                p.huntContact = 0;
-                            }
+                            e.feedCount = 0;
                         }
-                    } else {
-                        p.huntContact = Math.max(0, p.huntContact - dt * 2);
+                        if (Math.random() < 0.3) {
+                            for (let i=0; i<3; i++) foods.push({ x: rand(20,W-20), y: rand(20,H-20), r: 4 });
+                        }
                     }
                 } else {
-                    // 随机漫游
-                    if (Math.random() < 0.03) {
-                        moveX = rand(-1, 1) * p.speed * 0.5;
-                        moveY = rand(-1, 1) * p.speed * 0.5;
-                    }
+                    e.contactTimer = Math.max(0, e.contactTimer - dtEff*2);
                 }
-
-                // 边界
-                const margin = 20;
-                if (p.x < margin) moveX += p.speed * 0.4;
-                if (p.x > W - margin) moveX -= p.speed * 0.4;
-                if (p.y < margin) moveY += p.speed * 0.4;
-                if (p.y > H - margin) moveY -= p.speed * 0.4;
-
-                const spd = Math.hypot(moveX, moveY);
-                if (spd > p.speed) {
-                    moveX = (moveX / spd) * p.speed;
-                    moveY = (moveY / spd) * p.speed;
-                }
-
-                p.x += moveX * dt * 60;
-                p.y += moveY * dt * 60;
-                p.x = clamp(p.x, 5, W - 5);
-                p.y = clamp(p.y, 5, H - 5);
+            } else {
+                e.contactTimer = Math.max(0, e.contactTimer - dtEff);
+                e.vx += rand(-0.02,0.02); e.vy += rand(-0.02,0.02);
             }
-
-            // 清理死亡捕猎者
-            predators = predators.filter(p => p.alive);
-
-            // 强制斩杀
-            const maxPredators = CONFIG.pCount * 10;
-            if (predators.length > maxPredators) {
-                predators.sort((a, b) => a.hp - b.hp);
-                const killCount = Math.floor((predators.length - maxPredators) * 0.5);
-                for (let i = 0; i < killCount && i < predators.length; i++) {
-                    predators[i].alive = false;
-                }
-                predators = predators.filter(p => p.alive);
-            }
+            const spd = Math.hypot(e.vx, e.vy);
+            const maxSpd = e.speed * 1.5;
+            if (spd > maxSpd) { e.vx = (e.vx/spd)*maxSpd; e.vy = (e.vy/spd)*maxSpd; }
+            e.x += e.vx * dtEff * 40; e.y += e.vy * dtEff * 40;
+            if (e.x < 5) e.x=5; if (e.x > W-5) e.x=W-5;
+            if (e.y < 5) e.y=5; if (e.y > H-5) e.y=H-5;
+            if (e.x<10 || e.x>W-10) e.vx *= -0.5;
+            if (e.y<10 || e.y>H-10) e.vy *= -0.5;
+            const diff = colorDiff(e.color, bgColor);
+            const normDiff = clamp(diff / 255, 0, 1);
+            e.lifespan -= dtEff * (1 + normDiff * pressure * 1.2);
+            if (e.lifespan <= 0) e.alive = false;
         }
 
-        function updateFood(dt) {
-            // 自然消耗 - 每3秒消失一些
-            if (Math.random() < 0.005) {
-                const alive = foods.filter(f => f.alive);
-                if (alive.length > 10) {
-                    const idx = randInt(0, alive.length - 1);
-                    alive[idx].alive = false;
-                }
-            }
-
-            // 补充食物 - 保持一定数量
-            const targetFood = Math.max(10, collectors.length * 2 + 5);
-            const aliveFood = foods.filter(f => f.alive);
-            while (aliveFood.length < targetFood && foods.length < 500) {
-                spawnFood();
-                aliveFood.push(foods[foods.length - 1]);
-            }
-
-            // 清理死亡食物
-            foods = foods.filter(f => f.alive);
+        // 斩杀
+        const initPrey = parseInt(preyNum.value) || 25;
+        const initPred = parseInt(predNum.value) || 10;
+        let alivePrey = entities.filter(e => e.isPrey && e.alive);
+        let alivePred = entities.filter(e => e.isPredator && e.alive);
+        if (alivePrey.length > initPrey * 10) {
+            alivePrey.sort((a,b) => a.lifespan - b.lifespan);
+            const kill = Math.floor(alivePrey.length / 2);
+            for (let i=0; i<kill; i++) alivePrey[i].alive = false;
+            eventLog.innerHTML = '⚔️ 斩杀: 采集者数量超标';
+        }
+        if (alivePred.length > initPred * 10) {
+            alivePred.sort((a,b) => a.lifespan - b.lifespan);
+            const kill = Math.floor(alivePred.length / 2);
+            for (let i=0; i<kill; i++) alivePred[i].alive = false;
+            eventLog.innerHTML = '⚔️ 斩杀: 捕猎者数量超标';
         }
 
-        // ---------- 随机事件 ----------
-        function checkRandomEvents(dt) {
-            const events = [
-                { prob: 0.01, fn: eventHarvest, name: '五谷丰登' },
-                { prob: 0.005, fn: eventLightning, name: '闪电' },
-                { prob: 0.001, fn: eventDeceive, name: '瞒天过海' },
-            ];
-            for (const ev of events) {
-                if (Math.random() < ev.prob * dt * 60) {
-                    ev.fn();
-                    showEventToast(ev.name);
-                }
-            }
+        entities = entities.filter(e => e.alive);
+        if (foods.length < alivePrey.length * 2) {
+            for (let i=0; i<alivePrey.length; i++) foods.push({ x: rand(20,W-20), y: rand(20,H-20), r: 4 });
         }
 
-        function eventHarvest() {
-            const count = collectors.length;
-            for (let i = 0; i < Math.min(count, 30); i++) {
-                spawnFood();
+        generation++;
+        if (generation % 10 === 0) updateCharts(false);
+        updateUI();
+    }
+
+    // ---------- 分裂函数 ----------
+    function splitEntity(parent, type, p) {
+        const count = type === 'prey' ? p.preySplit : p.predSplit;
+        const mutProb = type === 'prey' ? p.preyMutProb : p.predMutProb;
+        const envBias = p.envBiasProb;
+        for (let i=0; i<count; i++) {
+            let childColor = { ...parent.color };
+            if (Math.random() < mutProb) {
+                const shift = 25;
+                childColor.r = clamp(childColor.r + randInt(-shift, shift), 0, 255);
+                childColor.g = clamp(childColor.g + randInt(-shift, shift), 0, 255);
+                childColor.b = clamp(childColor.b + randInt(-shift, shift), 0, 255);
             }
+            if (Math.random() < envBias) {
+                childColor.r = clamp(childColor.r + (bgColor.r - childColor.r)*0.3, 0, 255);
+                childColor.g = clamp(childColor.g + (bgColor.g - childColor.g)*0.3, 0, 255);
+                childColor.b = clamp(childColor.b + (bgColor.b - childColor.b)*0.3, 0, 255);
+            }
+            const childSize = clamp(parent.size * rand(0.8,1.2), 3, type==='prey'?p.preyMaxSize:p.predMaxSize);
+            const childSpeed = clamp(parent.speed * rand(0.8,1.2), 0.2, type==='prey'?p.preyMaxSpeed:p.predMaxSpeed);
+            const childMaxLife = parent.maxLifespan * rand(0.9, 1.1);
+            const child = new Entity(type, parent.x + rand(-20,20), parent.y + rand(-20,20), childSize, childSpeed, childColor, childMaxLife);
+            child.vx = rand(-0.5,0.5); child.vy = rand(-0.5,0.5);
+            entities.push(child);
+        }
+    }
+
+    // ---------- 图表更新 ----------
+    function updateCharts(forceClear) {
+        const prey = entities.filter(e => e.isPrey && e.alive);
+        const pred = entities.filter(e => e.isPredator && e.alive);
+        const bgLum = lum(bgColor.r, bgColor.g, bgColor.b);
+        const preyLum = prey.length ? prey.reduce((s,e) => s + lum(e.color.r,e.color.g,e.color.b),0)/prey.length : bgLum;
+        const predLum = pred.length ? pred.reduce((s,e) => s + lum(e.color.r,e.color.g,e.color.b),0)/pred.length : bgLum;
+        const preyHue = prey.length ? prey.reduce((s,e) => s + rgbToHue(e.color.r,e.color.g,e.color.b),0)/prey.length : 0;
+        const predHue = pred.length ? pred.reduce((s,e) => s + rgbToHue(e.color.r,e.color.g,e.color.b),0)/pred.length : 0;
+        const avgPreySize = prey.length ? prey.reduce((s,e) => s + e.size,0)/prey.length : 0;
+        const avgPredSize = pred.length ? pred.reduce((s,e) => s + e.size,0)/pred.length : 0;
+
+        history.time.push(simTime);
+        history.bgLum.push(bgLum);
+        history.preyLum.push(preyLum);
+        history.predLum.push(predLum);
+        history.preyHue.push(preyHue);
+        history.predHue.push(predHue);
+        history.preyPop.push(prey.length);
+        history.predPop.push(pred.length);
+        history.preyAvgSize.push(avgPreySize);
+        history.predAvgSize.push(avgPredSize);
+        if (history.time.length > MAX_HISTORY) {
+            ['time','bgLum','preyLum','predLum','preyHue','predHue','preyPop','predPop','preyAvgSize','predAvgSize'].forEach(k => history[k].shift());
         }
 
-        function eventLightning() {
-            const W = canvas.width,
-                H = canvas.height;
-            const all = [...collectors, ...predators].filter(c => c.alive);
-            if (all.length === 0) return;
-            const target = all[randInt(0, all.length - 1)];
-            const dmg = target.maxHp;
-            target.takeDamage(dmg);
-            const radius = target.size * 2;
-            lightningZones.push({
-                x: target.x,
-                y: target.y,
-                radius: radius,
-                endTime: simTime + 5 // 持续5秒
+        const sample = entities.filter(e => e.alive).slice(0, 80);
+        for (let e of sample) {
+            const diff = colorDiff(e.color, bgColor);
+            const remain = clamp(e.lifespan / e.maxLifespan, 0, 1) * 100;
+            scatterData.x.push(diff);
+            scatterData.y.push(remain);
+            if (scatterData.x.length > 200) { scatterData.x.shift(); scatterData.y.shift(); }
+        }
+
+        if (!trendChart) {
+            const ctx1 = document.getElementById('trendChart').getContext('2d');
+            const ctx2 = document.getElementById('scatterChart').getContext('2d');
+            const ctx3 = document.getElementById('popChart').getContext('2d');
+            trendChart = new Chart(ctx1, {
+                type: 'line', data: { labels: [], datasets: [
+                    { label: '环境亮度', data: [], borderColor: '#f2c94a', backgroundColor: 'transparent', tension:0.2, pointRadius:0 },
+                    { label: '采集者亮度', data: [], borderColor: '#6fcf97', backgroundColor: 'transparent', tension:0.2, pointRadius:0 },
+                    { label: '捕猎者亮度', data: [], borderColor: '#eb5757', backgroundColor: 'transparent', tension:0.2, pointRadius:0 },
+                    { label: '采集者色相', data: [], borderColor: '#ff9f43', backgroundColor: 'transparent', tension:0.2, pointRadius:0, borderDash: [5,5] },
+                    { label: '捕猎者色相', data: [], borderColor: '#a29bfe', backgroundColor: 'transparent', tension:0.2, pointRadius:0, borderDash: [5,5] }
+                ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#aaa', boxWidth:10 } } }, scales: { y: { min:0, max:360, grid: { color:'#333' } }, x: { grid: { color:'#333' }, ticks: { color:'#888' } } } }
             });
-            // 限制闪电区域数量
-            if (lightningZones.length > 10) lightningZones.shift();
-            showEventToast(`⚡ 闪电击中! 造成 ${dmg.toFixed(1)} 伤害`);
+            scatterChart = new Chart(ctx2, {
+                type: 'scatter', data: { datasets: [{ label: '个体 (色差 vs 剩余寿命%)', data: [], backgroundColor: '#f2994a', pointRadius:2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#aaa' } } }, scales: { x: { title: { display: true, text: '色差 (与环境)', color:'#aaa' }, grid: { color:'#333' } }, y: { title: { display: true, text: '剩余寿命 %', color:'#aaa' }, min:0, max:100, grid: { color:'#333' } } } }
+            });
+            popChart = new Chart(ctx3, {
+                type: 'line', data: { labels: [], datasets: [
+                    { label: '采集者数量', data: [], borderColor: '#6fcf97', backgroundColor: 'transparent', tension:0.2, pointRadius:0 },
+                    { label: '捕猎者数量', data: [], borderColor: '#eb5757', backgroundColor: 'transparent', tension:0.2, pointRadius:0 },
+                    { label: '采集者平均大小', data: [], borderColor: '#bb86fc', backgroundColor: 'transparent', tension:0.2, pointRadius:0, yAxisID: 'y1' },
+                    { label: '捕猎者平均大小', data: [], borderColor: '#ffb74d', backgroundColor: 'transparent', tension:0.2, pointRadius:0, yAxisID: 'y1' }
+                ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#aaa', boxWidth:10 } } }, scales: { y: { position: 'left', grid: { color:'#333' }, ticks: { color:'#aaa' } }, y1: { position: 'right', grid: { drawOnChartArea: false }, min:0, ticks: { color:'#aaa' } }, x: { grid: { color:'#333' }, ticks: { color:'#888' } } } }
+            });
         }
 
-        function eventDeceive() {
-            const camp = Math.random() < 0.5 ? 'collector' : 'predator';
-            deceivedCamp = camp;
-            deceivedUntil = simTime + 5;
-            const bg = CONFIG.bgColor;
-            const nearColor = randomColorNear(bg, 40);
-            const list = camp === 'collector' ? collectors : predators;
-            for (const c of list) {
-                if (c.alive) {
-                    c.deceiveColor = nearColor;
-                    c.deceiveEnd = simTime + 5;
-                }
-            }
-            showEventToast(`🎭 瞒天过海! ${camp === 'collector' ? '采集者' : '捕猎者'} 伪装成背景色`);
+        const n = history.time.length;
+        trendChart.data.labels = history.time.map(t => t.toFixed(1));
+        trendChart.data.datasets[0].data = history.bgLum;
+        trendChart.data.datasets[1].data = history.preyLum;
+        trendChart.data.datasets[2].data = history.predLum;
+        trendChart.data.datasets[3].data = history.preyHue;
+        trendChart.data.datasets[4].data = history.predHue;
+        trendChart.update('none');
+
+        const scatterD = scatterData.x.map((x,i) => ({ x, y: scatterData.y[i] }));
+        scatterChart.data.datasets[0].data = scatterD;
+        scatterChart.update('none');
+
+        popChart.data.labels = history.time.map(t => t.toFixed(1));
+        popChart.data.datasets[0].data = history.preyPop;
+        popChart.data.datasets[1].data = history.predPop;
+        popChart.data.datasets[2].data = history.preyAvgSize;
+        popChart.data.datasets[3].data = history.predAvgSize;
+        popChart.update('none');
+    }
+
+    function updateUI() {
+        const prey = entities.filter(e => e.isPrey && e.alive);
+        const pred = entities.filter(e => e.isPredator && e.alive);
+        preyCountEl.textContent = prey.length;
+        predCountEl.textContent = pred.length;
+        foodCountEl.textContent = foods.length;
+        genCountEl.textContent = generation;
+    }
+
+    // ---------- 绘制 ----------
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = rgbToStr(bgColor.r, bgColor.g, bgColor.b);
+        ctx.fillRect(0, 0, W, H);
+        for (let f of foods) {
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+            ctx.fillStyle = '#7ddf7d';
+            ctx.shadowColor = '#7ddf7d'; ctx.shadowBlur = 8;
+            ctx.fill();
+            ctx.shadowBlur = 0;
         }
-
-        // 手动触发事件
-        function triggerEvent(name) {
-            if (name === 'harvest') eventHarvest();
-            else if (name === 'lightning') eventLightning();
-            else if (name === 'deceive') eventDeceive();
-        }
-
-        let toastTimeout = null;
-
-        function showEventToast(msg) {
-            const el = document.getElementById('eventToast');
-            el.textContent = msg;
-            el.classList.add('show');
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                el.classList.remove('show');
-            }, 2500);
-        }
-
-        // ---------- 更新图表 ----------
-        function updateChart() {
-            const cCount = collectors.filter(c => c.alive).length;
-            const pCount = predators.filter(p => p.alive).length;
-            const cAvgSize = collectors.filter(c => c.alive).reduce((s, c) => s + c.size, 0) / (cCount || 1);
-            const pAvgSize = predators.filter(p => p.alive).reduce((s, p) => s + p.size, 0) / (pCount || 1);
-
-            chartData.time.push(simTime);
-            chartData.collectorAvgSize.push(cAvgSize);
-            chartData.predatorAvgSize.push(pAvgSize);
-            chartData.collectorCount.push(cCount);
-            chartData.predatorCount.push(pCount);
-
-            if (chartData.time.length > chartMaxPoints) {
-                chartData.time.shift();
-                chartData.collectorAvgSize.shift();
-                chartData.predatorAvgSize.shift();
-                chartData.collectorCount.shift();
-                chartData.predatorCount.shift();
-            }
-
-            drawChart();
-        }
-
-        function drawChart() {
-            const W = chartCanvas.width,
-                H = chartCanvas.height;
-            const c = chartCtx;
-            c.clearRect(0, 0, W, H);
-
-            if (chartData.time.length < 2) return;
-
-            const pad = { top: 12, bottom: 18, left: 32, right: 12 };
-            const chartW = W - pad.left - pad.right;
-            const chartH = H - pad.top - pad.bottom;
-
-            // 背景
-            c.fillStyle = 'rgba(10,10,30,0.5)';
-            c.fillRect(0, 0, W, H);
-
-            // 网格
-            c.strokeStyle = 'rgba(255,255,255,0.05)';
-            c.lineWidth = 0.5;
-            for (let i = 0; i < 5; i++) {
-                const y = pad.top + (chartH / 5) * i;
-                c.beginPath();
-                c.moveTo(pad.left, y);
-                c.lineTo(W - pad.right, y);
-                c.stroke();
-            }
-
-            const dataLen = chartData.time.length;
-            const maxVal = Math.max(
-                5,
-                ...chartData.collectorAvgSize,
-                ...chartData.predatorAvgSize,
-                ...chartData.collectorCount,
-                ...chartData.predatorCount
-            ) * 1.2;
-
-            const drawLine = (data, color, label) => {
-                c.strokeStyle = color;
-                c.lineWidth = 2;
-                c.beginPath();
-                for (let i = 0; i < data.length; i++) {
-                    const x = pad.left + (i / (dataLen - 1)) * chartW;
-                    const y = pad.top + chartH - (data[i] / maxVal) * chartH;
-                    if (i === 0) c.moveTo(x, y);
-                    else c.lineTo(x, y);
-                }
-                c.stroke();
-                // 小圆点
-                if (data.length > 0) {
-                    const last = data.length - 1;
-                    const x = pad.left + (last / (dataLen - 1)) * chartW;
-                    const y = pad.top + chartH - (data[last] / maxVal) * chartH;
-                    c.fillStyle = color;
-                    c.beginPath();
-                    c.arc(x, y, 3, 0, Math.PI * 2);
-                    c.fill();
-                }
-            };
-
-            drawLine(chartData.collectorAvgSize, '#7bed9f', '采集者平均大小');
-            drawLine(chartData.predatorAvgSize, '#ff6b6b', '捕猎者平均大小');
-            drawLine(chartData.collectorCount, '#74b9ff', '采集者数量');
-            drawLine(chartData.predatorCount, '#ffd93d', '捕猎者数量');
-
-            // 标注
-            c.fillStyle = '#888';
-            c.font = '9px monospace';
-            c.fillText('大小/数量', 2, 10);
-            c.fillText(maxVal.toFixed(1), 2, pad.top + 10);
-            c.fillText('0', 2, H - 4);
-
-            // 图例
-            const legend = [
-                { color: '#7bed9f', label: '采集者大小' },
-                { color: '#ff6b6b', label: '捕猎者大小' },
-                { color: '#74b9ff', label: '采集者数量' },
-                { color: '#ffd93d', label: '捕猎者数量' },
-            ];
-            let lx = W - 120,
-                ly = 6;
-            c.font = '8px sans-serif';
-            for (const item of legend) {
-                c.fillStyle = item.color;
-                c.fillRect(lx, ly, 10, 3);
-                c.fillStyle = '#aaa';
-                c.fillText(item.label, lx + 14, ly + 5);
-                ly += 14;
-            }
-        }
-
-        // ---------- 渲染 ----------
-        function render() {
-            const W = canvas.width,
-                H = canvas.height;
-            const bgColor = CONFIG.bgColor;
-
-            // 背景
-            const r = (bgColor >> 16) & 0xff,
-                g = (bgColor >> 8) & 0xff,
-                b = bgColor & 0xff;
-            ctx.fillStyle = `rgb(${r},${g},${b})`;
-            ctx.fillRect(0, 0, W, H);
-
-            // 绘制网格 (微弱)
-            ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-            ctx.lineWidth = 0.5;
-            for (let x = 0; x < W; x += 50) {
+        for (let e of entities) {
+            if (!e.alive) continue;
+            ctx.shadowBlur = 0;
+            const col = rgbToStr(e.color.r, e.color.g, e.color.b);
+            ctx.fillStyle = col;
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 0.5;
+            if (e.isPrey) {
+                const s = e.size;
+                ctx.fillRect(e.x - s/2, e.y - s/2, s, s);
+                ctx.strokeRect(e.x - s/2, e.y - s/2, s, s);
+            } else {
                 ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, H);
+                ctx.arc(e.x, e.y, e.size/2, 0, Math.PI*2);
+                ctx.fill();
                 ctx.stroke();
             }
-            for (let y = 0; y < H; y += 50) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(W, y);
-                ctx.stroke();
-            }
-
-            // 绘制闪电区域
-            for (const zone of lightningZones) {
-                if (zone.endTime < simTime) continue;
-                const grad = ctx.createRadialGradient(zone.x, zone.y, 0, zone.x, zone.y, zone.radius);
-                grad.addColorStop(0, 'rgba(255,255,100,0.25)');
-                grad.addColorStop(0.5, 'rgba(255,200,50,0.12)');
-                grad.addColorStop(1, 'rgba(255,200,50,0)');
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(zone.x, zone.y, zone.radius, 0, Math.PI * 2);
-                ctx.fill();
-                // 边框
-                ctx.strokeStyle = 'rgba(255,255,100,0.15)';
-                ctx.lineWidth = 1;
-                ctx.setLineDash([4, 6]);
-                ctx.beginPath();
-                ctx.arc(zone.x, zone.y, zone.radius, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.setLineDash([]);
-            }
-
-            // 绘制食物
-            for (const f of foods) {
-                if (!f.alive) continue;
-                ctx.fillStyle = '#7bed9f';
-                ctx.shadowColor = '#7bed9f';
-                ctx.shadowBlur = 8;
-                ctx.beginPath();
-                ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-
-            // 绘制采集者 (方块)
-            for (const c of collectors) {
-                if (!c.alive) continue;
-                const color = c.displayColor;
-                const r2 = (color >> 16) & 0xff,
-                    g2 = (color >> 8) & 0xff,
-                    b2 = color & 0xff;
-                ctx.fillStyle = `rgb(${r2},${g2},${b2})`;
-                ctx.shadowColor = `rgba(${r2},${g2},${b2},0.3)`;
-                ctx.shadowBlur = 10;
-                const half = c.size / 2;
-                ctx.fillRect(c.x - half, c.y - half, c.size, c.size);
-                ctx.shadowBlur = 0;
-                // 血条
-                const hpRatio = c.hp / c.maxHp;
-                const barW = c.size * 1.2;
-                const barH = 3;
-                const barX = c.x - barW / 2;
-                const barY = c.y - half - 6;
-                ctx.fillStyle = 'rgba(0,0,0,0.6)';
-                ctx.fillRect(barX, barY, barW, barH);
-                ctx.fillStyle = hpRatio > 0.5 ? '#7bed9f' : hpRatio > 0.25 ? '#ffd93d' : '#ff6b6b';
-                ctx.fillRect(barX, barY, barW * hpRatio, barH);
-            }
-
-            // 绘制捕猎者 (圆球)
-            for (const p of predators) {
-                if (!p.alive) continue;
-                const color = p.displayColor;
-                const r2 = (color >> 16) & 0xff,
-                    g2 = (color >> 8) & 0xff,
-                    b2 = color & 0xff;
-                ctx.fillStyle = `rgb(${r2},${g2},${b2})`;
-                ctx.shadowColor = `rgba(${r2},${g2},${b2},0.4)`;
-                ctx.shadowBlur = 14;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-                // 血条
-                const hpRatio = p.hp / p.maxHp;
-                const barW = p.size * 1.2;
-                const barH = 3;
-                const barX = p.x - barW / 2;
-                const barY = p.y - p.size / 2 - 6;
-                ctx.fillStyle = 'rgba(0,0,0,0.6)';
-                ctx.fillRect(barX, barY, barW, barH);
-                ctx.fillStyle = hpRatio > 0.5 ? '#7bed9f' : hpRatio > 0.25 ? '#ffd93d' : '#ff6b6b';
-                ctx.fillRect(barX, barY, barW * hpRatio, barH);
-            }
-
-            // 渲染统计信息在画布上
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
-            ctx.font = '11px monospace';
-            ctx.fillText(`采集: ${collectors.filter(c=>c.alive).length}  捕猎: ${predators.filter(p=>p.alive).length}  食物: ${foods.filter(f=>f.alive).length}`, 10, 16);
-            ctx.fillText(`世代: ${generation}  ⏱ ${simTime.toFixed(1)}s`, 10, 32);
-
-            // 更新DOM统计
-            document.getElementById('sCollector').textContent = collectors.filter(c => c.alive).length;
-            document.getElementById('sPredator').textContent = predators.filter(p => p.alive).length;
-            document.getElementById('sFood').textContent = foods.filter(f => f.alive).length;
-            document.getElementById('sTime').textContent = simTime.toFixed(1);
-            document.getElementById('sGen').textContent = generation;
+            const ratio = clamp(e.lifespan / e.maxLifespan, 0, 1);
+            ctx.fillStyle = ratio > 0.5 ? '#6fcf97' : '#f2994a';
+            ctx.fillRect(e.x-12, e.y - e.size/2 - 8, 24 * ratio, 3);
         }
-
-        // ---------- 主循环 ----------
-        let lastTime = 0;
-        let accumulator = 0;
-        const fixedDelta = 1 / 60;
-
-        function gameLoop(timestamp) {
-            const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
-            lastTime = timestamp;
-
-            if (!CONFIG.paused) {
-                const speed = CONFIG.speed;
-                accumulator += dt * speed;
-
-                while (accumulator >= fixedDelta) {
-                    step(fixedDelta);
-                    accumulator -= fixedDelta;
-                }
-
-                // 更新UI统计
-                updateStats();
-                // 每10帧更新图表
-                frameCount++;
-                if (frameCount % 10 === 0) {
-                    updateChart();
-                }
-            }
-
-            render();
-            requestAnimationFrame(gameLoop);
+        ctx.fillStyle = '#fff'; ctx.font = '12px monospace';
+        ctx.fillText(`环境压力: ${(parseFloat(pressureCoeff.value)||1).toFixed(1)}x`, 16, 22);
+        ctx.fillText(`个体数: ${entities.filter(e=>e.alive).length}`, 16, 40);
+        if (disaster.active) {
+            ctx.fillStyle = '#ff6b6b'; ctx.font = 'bold 18px sans-serif';
+            ctx.fillText(`⚠️ ${disaster.type} 进行中`, W-200, 30);
         }
+    }
 
-        function step(dt) {
-            simTime += dt;
+    // ---------- 循环 ----------
+    function loop(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        let dt = (timestamp - lastTimestamp) / 1000;
+        lastTimestamp = timestamp;
+        if (dt > 0.05) dt = 0.05;
 
-            // 清除过期的闪电区域
-            lightningZones = lightningZones.filter(z => z.endTime > simTime);
-
-            // 更新食物
-            updateFood(dt);
-
-            // 更新采集者
-            updateCollectors(dt);
-
-            // 更新捕猎者
-            updatePredators(dt);
-
-            // 随机事件
-            checkRandomEvents(dt);
-
-            // 清理完全死亡
-            collectors = collectors.filter(c => c.alive);
-            predators = predators.filter(p => p.alive);
-            foods = foods.filter(f => f.alive);
+        if (running && !paused) {
+            updateSim(dt);
         }
+        draw();
+        frameId = requestAnimationFrame(loop);
+    }
 
-        function updateStats() {
-            document.getElementById('simTime').textContent = simTime.toFixed(1);
-            document.getElementById('foodCount').textContent = foods.filter(f => f.alive).length;
-            document.getElementById('collectorCount').textContent = collectors.filter(c => c.alive).length;
-            document.getElementById('predatorCount').textContent = predators.filter(p => p.alive).length;
-            document.getElementById('genCount').textContent = generation;
-            // 侧面板统计
-            document.getElementById('sCollector').textContent = collectors.filter(c => c.alive).length;
-            document.getElementById('sPredator').textContent = predators.filter(p => p.alive).length;
-            document.getElementById('sFood').textContent = foods.filter(f => f.alive).length;
-            document.getElementById('sTime').textContent = simTime.toFixed(1);
-            document.getElementById('sGen').textContent = generation;
+    // ---------- 控制 ----------
+    function startSim() {
+        if (!running) {
+            running = true; paused = false;
+            document.getElementById('startBtn').textContent = '▶ 运行中';
+            lastTimestamp = 0;
+            if (frameId) cancelAnimationFrame(frameId);
+            frameId = requestAnimationFrame(loop);
+        } else if (paused) {
+            paused = false;
+            document.getElementById('startBtn').textContent = '▶ 运行中';
+            lastTimestamp = 0;
         }
-
-        // ---------- 画布尺寸适配 ----------
-        function resizeCanvas() {
-            const wrapper = canvas.parentElement;
-            const rect = wrapper.getBoundingClientRect();
-            const w = rect.width;
-            const h = rect.height - 2;
-            canvas.width = Math.floor(w);
-            canvas.height = Math.floor(h);
-
-            const chartRect = chartCanvas.parentElement.getBoundingClientRect();
-            chartCanvas.width = Math.floor(chartRect.width);
-            chartCanvas.height = Math.floor(chartRect.height);
+    }
+    function pauseSim() {
+        if (running) {
+            paused = !paused;
+            document.getElementById('startBtn').textContent = paused ? '⏸ 已暂停' : '▶ 运行中';
+            if (!paused) lastTimestamp = 0;
         }
+    }
 
-        // ---------- UI绑定 ----------
-        function bindUI() {
-            // 速度
-            const speedSlider = document.getElementById('speedSlider');
-            const speedLabel = document.getElementById('speedLabel');
-            speedSlider.addEventListener('input', () => {
-                CONFIG.speed = parseFloat(speedSlider.value);
-                speedLabel.textContent = CONFIG.speed.toFixed(1) + 'x';
-            });
+    document.getElementById('startBtn').addEventListener('click', startSim);
+    document.getElementById('pauseBtn').addEventListener('click', pauseSim);
+    document.getElementById('resetBtn').addEventListener('click', resetSim);
 
-            // 背景颜色
-            const bgPicker = document.getElementById('bgColorPicker');
-            bgPicker.addEventListener('input', () => {
-                CONFIG.bgColor = parseInt(bgPicker.value.slice(1), 16);
-            });
+    speedSlider.addEventListener('input', function() {
+        speedLabel.textContent = parseFloat(this.value).toFixed(1) + 'x';
+    });
+    pressureCoeff.addEventListener('input', function() {
+        pressureLabel.textContent = parseFloat(this.value).toFixed(1);
+    });
 
-            // 暂停
-            const pauseBtn = document.getElementById('pauseBtn');
-            pauseBtn.addEventListener('click', () => {
-                CONFIG.paused = !CONFIG.paused;
-                pauseBtn.textContent = CONFIG.paused ? '▶️ 运行' : '⏸️ 暂停';
-            });
+    bgColorPicker.addEventListener('input', function() {
+        const val = this.value;
+        const m = val.match(/\d+/g);
+        if (m) { bgColor.r = parseInt(m[0]); bgColor.g = parseInt(m[1]); bgColor.b = parseInt(m[2]); }
+    });
 
-            // 重置
-            document.getElementById('resetBtn').addEventListener('click', () => {
-                readConfigFromUI();
-                initSimulation();
-                // 重置视野
-                viewOffsetX = 0;
-                viewOffsetY = 0;
-                chartData = { time: [], collectorAvgSize: [], predatorAvgSize: [], collectorCount: [], predatorCount: [] };
-                updateChart();
-            });
-
-            // 事件按钮
-            document.getElementById('eventHarvest').addEventListener('click', () => {
-                triggerEvent('harvest');
-                showEventToast('🌾 五谷丰登 (手动触发)');
-            });
-            document.getElementById('eventLightning').addEventListener('click', () => {
-                triggerEvent('lightning');
-            });
-            document.getElementById('eventDeceive').addEventListener('click', () => {
-                triggerEvent('deceive');
-                showEventToast('🎭 瞒天过海 (手动触发)');
-            });
-
-            // 配置模态框
-            const modal = document.getElementById('configModal');
-            document.getElementById('configBtn').addEventListener('click', () => {
-                buildModalContent();
-                modal.classList.add('active');
-            });
-            document.getElementById('modalClose').addEventListener('click', () => modal.classList.remove('active'));
-            document.getElementById('modalClose2').addEventListener('click', () => modal.classList.remove('active'));
-            document.getElementById('modalApply').addEventListener('click', () => {
-                readConfigFromModal();
-                modal.classList.remove('active');
-                // 应用配置到模拟
-                // 注意：部分参数需要重置才生效，但这里我们直接更新配置并重启模拟
-                if (confirm('应用参数将重置模拟，是否继续？')) {
-                    initSimulation();
-                    updateChart();
-                }
-            });
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.classList.remove('active');
-            });
-
-            // 从UI读取参数 (用于重置)
-            function readConfigFromUI() {
-                CONFIG.cSize = parseFloat(document.getElementById('cSize').value) || 10;
-                CONFIG.cSpeed = parseFloat(document.getElementById('cSpeed').value) || 2;
-                CONFIG.cCount = parseInt(document.getElementById('cCount').value) || 10;
-                CONFIG.cHp = parseFloat(document.getElementById('cHp').value) || 5;
-                CONFIG.cHpDecay = parseFloat(document.getElementById('cHpDecay').value) || 2;
-                CONFIG.cSplit = parseInt(document.getElementById('cSplit').value) || 4;
-                CONFIG.cSplitProb = parseFloat(document.getElementById('cSplitProb').value) || 50;
-                CONFIG.cMutProb = parseFloat(document.getElementById('cMutProb').value) || 5;
-                CONFIG.cVolRange = parseRange(document.getElementById('cVolRange').value, -5, 5);
-                CONFIG.cSpdRange = parseRange(document.getElementById('cSpdRange').value, -3, 3);
-                CONFIG.cHealRange = parseRange(document.getElementById('cHealRange').value, 1, 4);
-
-                CONFIG.pSize = parseFloat(document.getElementById('pSize').value) || 20;
-                CONFIG.pSpeed = parseFloat(document.getElementById('pSpeed').value) || 1;
-                CONFIG.pCount = parseInt(document.getElementById('pCount').value) || 2;
-                CONFIG.pHp = parseFloat(document.getElementById('pHp').value) || 10;
-                CONFIG.pHpDecay = parseFloat(document.getElementById('pHpDecay').value) || 3;
-                CONFIG.pSplit = parseInt(document.getElementById('pSplit').value) || 2;
-                CONFIG.pSplitProb = parseFloat(document.getElementById('pSplitProb').value) || 50;
-                CONFIG.pMutProb = parseFloat(document.getElementById('pMutProb').value) || 5;
-                CONFIG.pVolRange = parseRange(document.getElementById('pVolRange').value, -10, 10);
-                CONFIG.pSpdRange = parseRange(document.getElementById('pSpdRange').value, -4, 4);
-                CONFIG.pHealRange = parseRange(document.getElementById('pHealRange').value, 1, 4);
-
-                CONFIG.huntTime = parseFloat(document.getElementById('huntTime').value) || 0.1;
-                CONFIG.huntDmg = parseFloat(document.getElementById('huntDmg').value) || 5;
-                CONFIG.huntBonus = parseFloat(document.getElementById('huntBonus').value) || 1;
-            }
-
-            // 从模态框读取
-            function readConfigFromModal() {
-                const inputs = modal.querySelectorAll('input[data-key]');
-                for (const inp of inputs) {
-                    const key = inp.dataset.key;
-                    const val = inp.value;
-                    if (key === 'cVolRange' || key === 'cSpdRange' || key === 'cHealRange' ||
-                        key === 'pVolRange' || key === 'pSpdRange' || key === 'pHealRange') {
-                        const parsed = parseRange(val, -5, 5);
-                        CONFIG[key] = parsed;
-                    } else if (key === 'bgColor') {
-                        CONFIG[key] = parseInt(val.slice(1), 16);
-                    } else {
-                        const num = parseFloat(val);
-                        if (!isNaN(num)) CONFIG[key] = num;
-                    }
-                }
-                // 同步到UI
-                syncUIToConfig();
-            }
-
-            function syncUIToConfig() {
-                const map = {
-                    'cSize': CONFIG.cSize,
-                    'cSpeed': CONFIG.cSpeed,
-                    'cCount': CONFIG.cCount,
-                    'cHp': CONFIG.cHp,
-                    'cHpDecay': CONFIG.cHpDecay,
-                    'cSplit': CONFIG.cSplit,
-                    'cSplitProb': CONFIG.cSplitProb,
-                    'cMutProb': CONFIG.cMutProb,
-                    'pSize': CONFIG.pSize,
-                    'pSpeed': CONFIG.pSpeed,
-                    'pCount': CONFIG.pCount,
-                    'pHp': CONFIG.pHp,
-                    'pHpDecay': CONFIG.pHpDecay,
-                    'pSplit': CONFIG.pSplit,
-                    'pSplitProb': CONFIG.pSplitProb,
-                    'pMutProb': CONFIG.pMutProb,
-                    'huntTime': CONFIG.huntTime,
-                    'huntDmg': CONFIG.huntDmg,
-                    'huntBonus': CONFIG.huntBonus,
-                };
-                for (const [id, val] of Object.entries(map)) {
-                    const el = document.getElementById(id);
-                    if (el) el.value = val;
-                }
-                // 范围
-                document.getElementById('cVolRange').value = `${CONFIG.cVolRange.min}~${CONFIG.cVolRange.max}`;
-                document.getElementById('cSpdRange').value = `${CONFIG.cSpdRange.min}~${CONFIG.cSpdRange.max}`;
-                document.getElementById('cHealRange').value = `${CONFIG.cHealRange.min}~${CONFIG.cHealRange.max}`;
-                document.getElementById('pVolRange').value = `${CONFIG.pVolRange.min}~${CONFIG.pVolRange.max}`;
-                document.getElementById('pSpdRange').value = `${CONFIG.pSpdRange.min}~${CONFIG.pSpdRange.max}`;
-                document.getElementById('pHealRange').value = `${CONFIG.pHealRange.min}~${CONFIG.pHealRange.max}`;
-                // 背景
-                document.getElementById('bgColorPicker').value = '#' + CONFIG.bgColor.toString(16).padStart(6, '0');
-            }
-
-            function buildModalContent() {
-                const content = document.getElementById('modalContent');
-                const fields = [
-                    { key: 'cSize', label: '采集者大小', def: 10 },
-                    { key: 'cSpeed', label: '采集者速度', def: 2 },
-                    { key: 'cCount', label: '采集者数量', def: 10 },
-                    { key: 'cHp', label: '采集者血量', def: 5 },
-                    { key: 'cHpDecay', label: '采集者每秒扣血', def: 2 },
-                    { key: 'cSplit', label: '采集者分裂数', def: 4 },
-                    { key: 'cSplitProb', label: '采集者分裂概率%', def: 50 },
-                    { key: 'cMutProb', label: '采集者变异概率%', def: 5 },
-                    { key: 'cVolRange', label: '采集者体积变化', def: '-5~5' },
-                    { key: 'cSpdRange', label: '采集者速度变化', def: '-3~3' },
-                    { key: 'cHealRange', label: '采集者回血', def: '1~4' },
-                    { key: 'pSize', label: '捕猎者大小', def: 20 },
-                    { key: 'pSpeed', label: '捕猎者速度', def: 1 },
-                    { key: 'pCount', label: '捕猎者数量', def: 2 },
-                    { key: 'pHp', label: '捕猎者血量', def: 10 },
-                    { key: 'pHpDecay', label: '捕猎者每秒扣血', def: 3 },
-                    { key: 'pSplit', label: '捕猎者分裂数', def: 2 },
-                    { key: 'pSplitProb', label: '捕猎者分裂概率%', def: 50 },
-                    { key: 'pMutProb', label: '捕猎者变异概率%', def: 5 },
-                    { key: 'pVolRange', label: '捕猎者体积变化', def: '-10~10' },
-                    { key: 'pSpdRange', label: '捕猎者速度变化', def: '-4~4' },
-                    { key: 'pHealRange', label: '捕猎者回血', def: '1~4' },
-                    { key: 'huntTime', label: '捕食接触时间(s)', def: 0.1 },
-                    { key: 'huntDmg', label: '每次捕食扣血', def: 5 },
-                    { key: 'huntBonus', label: '体型大额外扣血', def: 1 },
-                    { key: 'bgColor', label: '背景颜色', def: '#1a2a3a' },
-                ];
-
-                let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;">';
-                for (const f of fields) {
-                    const val = CONFIG[f.key] !== undefined ? CONFIG[f.key] : f.def;
-                    const isColor = f.key === 'bgColor';
-                    const inputType = isColor ? 'color' : (typeof val === 'number' ? 'number' : 'text');
-                    const step = (f.key.includes('Prob') || f.key.includes('Mut')) ? 1 : 0.1;
-                    html += `<label style="font-size:12px;color:#bbb;display:flex;align-items:center;gap:4px;">
-                        ${f.label}
-                        <input data-key="${f.key}" type="${inputType}" value="${isColor ? '#'+val.toString(16).padStart(6,'0') : val}" 
-                               ${inputType === 'number' ? `step="${step}"` : ''} 
-                               style="width:70px;padding:2px 4px;border-radius:3px;border:1px solid #444;background:#222;color:#eee;font-size:12px;text-align:center;flex-shrink:0;">
-                    </label>`;
-                }
-                html += '</div>';
-                content.innerHTML = html;
-            }
-
-            // 初始化同步
-            syncUIToConfig();
-            // 初始读取
-            readConfigFromUI();
+    canvas.addEventListener('click', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mx = (e.clientX - rect.left) * scaleX;
+        const my = (e.clientY - rect.top) * scaleY;
+        for (let i=0; i<20; i++) {
+            foods.push({ x: mx + rand(-30,30), y: my + rand(-30,30), r: 4 });
         }
+        eventLog.innerHTML = '🍕 手动投喂 +20 食物';
+    });
 
-        // ---------- 画布拖拽 ----------
-        function setupCanvasDrag() {
-            let isDragging = false;
-            let startX, startY, startOffX, startOffY;
+    document.querySelectorAll('.btn-disaster').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.disaster);
+            if (!isNaN(idx)) triggerDisaster(idx);
+        });
+    });
 
-            canvas.addEventListener('mousedown', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                startOffX = viewOffsetX;
-                startOffY = viewOffsetY;
-                canvas.style.cursor = 'grabbing';
-            });
-
-            window.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                viewOffsetX = startOffX + dx;
-                viewOffsetY = startOffY + dy;
-            });
-
-            window.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    canvas.style.cursor = 'crosshair';
-                }
-            });
-        }
-
-        // ---------- 启动 ----------
-        function init() {
-            resizeCanvas();
-            bindUI();
-            setupCanvasDrag();
-
-            // 读取配置并初始化
-            readConfigFromUI();
-            initSimulation();
-
-            // 窗口变化
-            window.addEventListener('resize', () => {
-                resizeCanvas();
-                // 调整食物位置避免出界
-                const W = canvas.width,
-                    H = canvas.height;
-                for (const f of foods) {
-                    f.x = clamp(f.x, 10, W - 10);
-                    f.y = clamp(f.y, 10, H - 10);
-                }
-                for (const c of collectors) {
-                    c.x = clamp(c.x, 10, W - 10);
-                    c.y = clamp(c.y, 10, H - 10);
-                }
-                for (const p of predators) {
-                    p.x = clamp(p.x, 10, W - 10);
-                    p.y = clamp(p.y, 10, H - 10);
-                }
-            });
-
-            // 启动循环
-            requestAnimationFrame(gameLoop);
-        }
-
-        // 重写readConfigFromUI 暴露给全局
-        window.readConfigFromUI = function() {
-            // already defined in bindUI
-        };
-
-        // 页面加载
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+    resetSim();
+    window.addEventListener('resize', ()=> { if (trendChart) trendChart.resize(); if(scatterChart)scatterChart.resize(); if(popChart)popChart.resize(); });
+})();
+</script>
 </body>
 </html>
