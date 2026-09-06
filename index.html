@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌍 自然选择 · 进食增寿与颜色进化</title>
+    <title>🌍 灰度进化 · 定向突变</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        /* (样式省略，与之前完全一致) */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #1a1a1a; color: #e0e0e0; font-family: 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; padding: 20px; }
         .container { max-width: 1600px; width: 100%; display: flex; flex-wrap: wrap; gap: 16px; }
@@ -28,8 +27,6 @@
         .btn-danger:hover { background: #b14545; }
         .btn-warning { background: #b88a2a; }
         .btn-warning:hover { background: #dbaa3a; }
-        .btn-disaster { background: #7a3a6a; color: #fff; padding: 4px 12px; border-radius: 20px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; transition:0.2s; }
-        .btn-disaster:hover { background: #a54a8a; }
         .status-bar { display: flex; flex-wrap: wrap; gap: 12px; font-size: 14px; background: #1f1f1f; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
         .status-item { display: flex; align-items: center; gap: 6px; }
         .status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 4px; }
@@ -44,25 +41,18 @@
         .chart-box canvas { width: 100% !important; height: 120px !important; }
         .event-log { background: #1a1a1a; border-radius: 8px; padding: 6px 12px; min-height: 32px; border-left: 4px solid #f0b34b; font-size: 14px; color: #f0d89a; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
         .event-log span { background: #2a2a2a; padding: 2px 10px; border-radius: 20px; }
-        .disaster-tag { background: #b33; color: #fff; padding: 0 8px; border-radius: 12px; font-weight: bold; margin-left: 8px; }
-        .disaster-control { display: flex; flex-wrap: wrap; gap: 8px 12px; background: #1f1f1f; padding: 10px; border-radius: 8px; margin-top: 8px; align-items: center; }
-        .disaster-control label { font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 4px; }
-        .disaster-control input[type="range"] { width: 60px; }
-        .disaster-control .btn-disaster { font-size: 11px; padding: 2px 12px; }
         @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } .param-group { grid-template-columns: 1fr; } .param-group .full { grid-column: span 1; } }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- 左侧面板 -->
     <div class="panel">
-        <h2>🧬 进化 · 增寿与颜色</h2>
+        <h2>🧬 灰度进化 · 定向突变</h2>
         <div class="status-bar">
             <div class="status-item"><span class="status-dot" style="background:#6fcf97;"></span> 采集者: <span id="preyCount">0</span></div>
             <div class="status-item"><span class="status-dot" style="background:#eb5757;"></span> 捕猎者: <span id="predCount">0</span></div>
-            <div class="status-item">🍀 食物: <span id="foodCount">0</span></div>
+            <div class="status-item">🍀 食物: <span id="foodCount">0</span> / <span id="foodMax">0</span></div>
             <div class="status-item">⏱️ 代: <span id="genCount">0</span></div>
-            <div class="status-item" id="activeDisaster" style="color:#f2994a;">🌪️ 灾害: 无</div>
         </div>
         <div class="slider-group">
             <span style="font-size:13px;">🐢 模拟速率</span>
@@ -75,8 +65,8 @@
             <button class="btn btn-danger" id="resetBtn">⟳ 重置</button>
         </div>
         <div style="margin:8px 0; display:flex; gap:8px; align-items:center;">
-            <label style="font-size:13px; color:#bbb;">🎨 环境背景</label>
-            <input type="color" id="bgColorPicker" value="#3a5a3a" style="width:40px;height:30px;border:none;background:none;cursor:pointer;">
+            <label style="font-size:13px; color:#bbb;">🎨 环境灰度</label>
+            <input type="color" id="bgColorPicker" value="#808080" style="width:40px;height:30px;border:none;background:none;cursor:pointer;">
             <label style="font-size:13px; color:#bbb; margin-left:10px;">⚡ 环境压力系数</label>
             <input type="range" id="pressureCoeff" min="0" max="2.5" step="0.1" value="1.0" style="flex:1; max-width:120px;">
             <span id="pressureLabel" style="font-size:13px; min-width:32px;">1.0</span>
@@ -84,70 +74,54 @@
         <div style="background:#1f1f1f; border-radius:8px; padding:10px; margin:8px 0; font-size:13px; color:#bbb;">
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
                 <span>🌿 采集者: 大小 <input type="number" id="preySize" value="10" style="width:50px;"> 速度 <input type="number" id="preySpeed" value="1" step="0.1" style="width:50px;"></span>
-                <!-- 捕猎者速度默认值改为 1.5 -->
                 <span>🐾 捕猎者: 大小 <input type="number" id="predSize" value="20" style="width:50px;"> 速度 <input type="number" id="predSpeed" value="1.5" step="0.1" style="width:50px;"></span>
             </div>
         </div>
         <details open>
             <summary style="cursor:pointer;color:#8cf0b0;">⚙️ 高级参数</summary>
             <div class="param-group">
-                <label>采集者数量 <input type="number" id="preyNum" value="25"></label>
-                <label>捕猎者数量 <input type="number" id="predNum" value="10"></label>
-                <label>采集者寿命(s) <input type="number" id="preyLife" value="20" step="0.5"></label>
-                <label>捕猎者寿命(s) <input type="number" id="predLife" value="20" step="0.5"></label>
+                <label>采集者数量 <input type="number" id="preyNum" value="50"></label>
+                <label>捕猎者数量 <input type="number" id="predNum" value="20"></label>
+                <label>采集者寿命(s) <input type="number" id="preyLife" value="5" step="0.5"></label>
+                <label>捕猎者寿命(s) <input type="number" id="predLife" value="2.5" step="0.5"></label>
                 <label style="color:#f0b34b;">🍽️ 采集者进食+寿命 <input type="number" id="preyFeedLifespan" value="2" step="0.5"></label>
                 <label style="color:#f0b34b;">🍽️ 捕猎者进食+寿命 <input type="number" id="predFeedLifespan" value="2" step="0.5"></label>
                 <label>捕猎接触时间(s) <input type="number" id="catchTime" value="0.1" step="0.01"></label>
                 <label>采集者大小上限 <input type="number" id="preyMaxSize" value="50"></label>
                 <label>捕猎者大小上限 <input type="number" id="predMaxSize" value="75"></label>
-                <label>采集者速度上限 <input type="number" id="preyMaxSpeed" value="10" step="0.5"></label>
-                <label>捕猎者速度上限 <input type="number" id="predMaxSpeed" value="10" step="0.5"></label>
-                <label class="full">采集者体积变化 <input type="text" id="preySizeRange" value="-5~5"></label>
-                <label class="full">采集者速度变化 <input type="text" id="preySpeedRange" value="-1.5~1.5"></label>
-                <label class="full">捕猎者体积变化 <input type="text" id="predSizeRange" value="-10~10"></label>
-                <label class="full">捕猎者速度变化 <input type="text" id="predSpeedRange" value="-1~1"></label>
+                <label>采集者速度上限 <input type="number" id="preyMaxSpeed" value="2" step="0.05"></label>
+                <label>捕猎者速度上限 <input type="number" id="predMaxSpeed" value="4" step="0.05"></label>
+                <label class="full">采集者体积增量上限 <input type="text" id="preySizeRange" value="0~5"></label>
+                <label class="full">采集者速度增量上限 <input type="text" id="preySpeedRange" value="0~0.15"></label>
+                <label class="full">捕猎者体积增量上限 <input type="text" id="predSizeRange" value="0~10"></label>
+                <label class="full">捕猎者速度增量上限 <input type="text" id="predSpeedRange" value="0~0.1"></label>
                 <label>采集者分裂数 <input type="number" id="preySplit" value="2"></label>
                 <label>捕猎者分裂数 <input type="number" id="predSplit" value="2"></label>
-                <label>采集者分裂概率% <input type="number" id="preySplitProb" value="50"></label>
-                <label>捕猎者分裂概率% <input type="number" id="predSplitProb" value="50"></label>
-                <label>采集者变异概率% <input type="number" id="preyMutProb" value="5"></label>
-                <label>捕猎者变异概率% <input type="number" id="predMutProb" value="5"></label>
-                <label class="full">环境导向变异概率% <input type="number" id="envBiasProb" value="30"></label>
-                <label class="full" style="color:#f0b34b;">🍽️ 采集者分裂阈值(食物) <input type="number" id="preySplitThreshold" value="5"></label>
+                <label>采集者基础分裂概率% <input type="number" id="preySplitProb" value="50"></label>
+                <label>捕猎者基础分裂概率% <input type="number" id="predSplitProb" value="50"></label>
+                <label class="full" style="color:#f0b34b;">🌿 环境导向变异概率% <input type="number" id="envBiasProb" value="30"></label>
+                <label class="full" style="color:#f0b34b;">🍽️ 采集者分裂阈值(食物) <input type="number" id="preySplitThreshold" value="10"></label>
                 <label class="full" style="color:#f0b34b;">🍽️ 捕猎者分裂阈值(猎物) <input type="number" id="predSplitThreshold" value="3"></label>
-            </div>
-            <!-- 灾害控制区域 -->
-            <div style="background:#1f1f1f; border-radius:8px; padding:10px; margin-top:12px;">
-                <div style="font-size:14px; color:#f0b34b; margin-bottom:6px;">🌪️ 灾害概率乘数 (0~3) & 一键触发</div>
-                <div class="disaster-control">
-                    <label>🌾五谷 <input type="range" id="disasterMul0" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul0Val">1.0</span> <button class="btn-disaster" data-disaster="0">触发</button></label>
-                    <label>🌀骤变 <input type="range" id="disasterMul1" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul1Val">1.0</span> <button class="btn-disaster" data-disaster="1">触发</button></label>
-                    <label>📡伪装 <input type="range" id="disasterMul2" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul2Val">1.0</span> <button class="btn-disaster" data-disaster="2">触发</button></label>
-                    <label>🌋地震 <input type="range" id="disasterMul3" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul3Val">1.0</span> <button class="btn-disaster" data-disaster="3">触发</button></label>
-                    <label>☀️干旱 <input type="range" id="disasterMul4" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul4Val">1.0</span> <button class="btn-disaster" data-disaster="4">触发</button></label>
-                    <label>🦠瘟疫 <input type="range" id="disasterMul5" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul5Val">1.0</span> <button class="btn-disaster" data-disaster="5">触发</button></label>
-                    <label>❄️暴雪 <input type="range" id="disasterMul6" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul6Val">1.0</span> <button class="btn-disaster" data-disaster="6">触发</button></label>
-                    <label>⚡磁暴 <input type="range" id="disasterMul7" min="0" max="3" step="0.1" value="1.0"> <span id="disasterMul7Val">1.0</span> <button class="btn-disaster" data-disaster="7">触发</button></label>
-                </div>
+                <!-- 拆分为两个阈值倍数 -->
+                <label class="full" style="color:#f0b34b;">📊 采集者数量阈值倍数 <input type="number" id="preyThresholdMultiplier" value="10" step="0.5"></label>
+                <label class="full" style="color:#f0b34b;">📊 捕猎者数量阈值倍数 <input type="number" id="predThresholdMultiplier" value="5" step="0.5"></label>
             </div>
         </details>
         <div class="event-log" id="eventLog">🌱 系统就绪，等待开始...</div>
     </div>
-    <!-- 右侧画布+图表 -->
     <div class="main-area">
         <div class="canvas-wrapper">
             <canvas id="simCanvas" width="960" height="540"></canvas>
         </div>
         <div class="chart-grid">
-            <div class="chart-box"><h4>📈 进化轨迹 (亮度 & 色相)</h4><canvas id="trendChart"></canvas></div>
-            <div class="chart-box"><h4>🎯 选择压力 (色差 vs 寿命)</h4><canvas id="scatterChart"></canvas></div>
+            <div class="chart-box"><h4>📈 进化轨迹 (灰度)</h4><canvas id="trendChart"></canvas></div>
+            <div class="chart-box"><h4>🎯 选择压力 (灰度差 vs 寿命)</h4><canvas id="scatterChart"></canvas></div>
             <div class="chart-box" style="grid-column: span 2;"><h4>📊 种群数量 & 平均大小</h4><canvas id="popChart"></canvas></div>
         </div>
     </div>
 </div>
 <script>
 (function(){
-    // ---------- DOM 引用 ----------
     const canvas = document.getElementById('simCanvas');
     const ctx = canvas.getContext('2d');
     const W = 960, H = 540;
@@ -167,80 +141,55 @@
     const predSizeRange = $('predSizeRange'), predSpeedRange = $('predSpeedRange');
     const preySplit = $('preySplit'), predSplit = $('predSplit');
     const preySplitProb = $('preySplitProb'), predSplitProb = $('predSplitProb');
-    const preyMutProb = $('preyMutProb'), predMutProb = $('predMutProb');
     const envBiasProb = $('envBiasProb');
     const preySplitThreshold = $('preySplitThreshold');
     const predSplitThreshold = $('predSplitThreshold');
+    // 两个独立的阈值倍数
+    const preyThresholdMultiplier = $('preyThresholdMultiplier');
+    const predThresholdMultiplier = $('predThresholdMultiplier');
     const speedSlider = $('speedSlider'), speedLabel = $('speedLabel');
     const bgColorPicker = $('bgColorPicker');
     const pressureCoeff = $('pressureCoeff'), pressureLabel = $('pressureLabel');
     const eventLog = $('eventLog');
     const preyCountEl = $('preyCount'), predCountEl = $('predCount'), foodCountEl = $('foodCount'), genCountEl = $('genCount');
-    const activeDisasterEl = $('activeDisaster');
+    const foodMaxEl = $('foodMax');
 
-    // 灾害乘数输入
-    const disasterMulInputs = [];
-    for (let i=0; i<8; i++) {
-        const slider = document.getElementById('disasterMul'+i);
-        const val = document.getElementById('disasterMul'+i+'Val');
-        if (slider) {
-            slider.addEventListener('input', function() { val.textContent = parseFloat(this.value).toFixed(1); });
-            disasterMulInputs.push(slider);
-        }
-    }
-
-    // ---------- 状态 ----------
     let running = false, paused = false;
     let simTime = 0;
     let generation = 0;
     let entities = [];
     let foods = [];
-    let bgColor = { r: 58, g: 90, b: 58 };
-    let pressureFactor = 1.0;
-    let speedMul = 1.0;
+    let bgColor = { r: 128, g: 128, b: 128 };
     let frameId = null;
     let lastTimestamp = 0;
 
-    let disaster = { active: false, type: '', timer: 0, data: {} };
-
-    // 图表实例
     let trendChart = null, scatterChart = null, popChart = null;
     const MAX_HISTORY = 120;
-    const history = { time: [], bgLum: [], preyLum: [], predLum: [], preyHue: [], predHue: [], preyPop: [], predPop: [], preyAvgSize: [], predAvgSize: [] };
+    const history = { time: [], bgLum: [], preyLum: [], predLum: [], preyPop: [], predPop: [], preyAvgSize: [], predAvgSize: [] };
     const scatterData = { x: [], y: [] };
 
-    // ---------- 工具函数 ----------
     function rand(min, max) { return Math.random() * (max - min) + min; }
     function randInt(min, max) { return Math.floor(rand(min, max+1)); }
     function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
     function rgbToStr(r,g,b) { return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`; }
-    function colorDiff(c1, c2) {
-        return Math.sqrt((c1.r-c2.r)**2 + (c1.g-c2.g)**2 + (c1.b-c2.b)**2);
-    }
-    function lum(r,g,b) { return 0.299*r + 0.587*g + 0.114*b; }
+    function colorDiff(c1, c2) { return Math.abs(c1.r - c2.r); }
+    function lum(r,g,b) { return r; }
     function parseRange(str) {
         let parts = str.split('~').map(s => parseFloat(s.trim()));
-        if(parts.length===2 && !isNaN(parts[0]) && !isNaN(parts[1])) return parts;
-        return [-1,1];
-    }
-    function randomColor() {
-        return { r: randInt(0,255), g: randInt(0,255), b: randInt(0,255) };
-    }
-    // RGB to Hue (0-360)
-    function rgbToHue(r,g,b) {
-        r/=255; g/=255; b/=255;
-        const max = Math.max(r,g,b), min = Math.min(r,g,b);
-        let h = 0;
-        if (max !== min) {
-            const d = max - min;
-            if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-            else if (max === g) h = ((b - r) / d + 2) / 6;
-            else if (max === b) h = ((r - g) / d + 4) / 6;
+        if(parts.length===2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            let min = Math.min(parts[0], parts[1]);
+            let max = Math.max(parts[0], parts[1]);
+            min = Math.max(0, min);
+            max = Math.max(0, max);
+            return [min, max];
         }
-        return h * 360;
+        return [0, 1];
+    }
+    function randomGray() {
+        const g = randInt(0,255);
+        return { r: g, g: g, b: g };
     }
 
-    // ---------- 实体类 ----------
     class Entity {
         constructor(type, x, y, size, speed, color, lifespan) {
             this.type = type;
@@ -255,33 +204,29 @@
             this.vy = rand(-0.5, 0.5);
             this.contactTimer = 0;
             this.target = null;
-            this.health = 1.0;
-            this.children = 0;
             this.feedCount = 0;
         }
         get isPrey() { return this.type === 'prey'; }
         get isPredator() { return this.type === 'predator'; }
     }
 
-    // ---------- 初始化 / 重置 ----------
     function parseParams() {
         return {
-            preyNum: parseInt(preyNum.value) || 25,
-            predNum: parseInt(predNum.value) || 10,
+            preyNum: parseInt(preyNum.value) || 50,
+            predNum: parseInt(predNum.value) || 20,
             preySize: parseFloat(preySize.value) || 10,
             preySpeed: parseFloat(preySpeed.value) || 1,
-            // 捕猎者速度后备默认值改为 1.5
             predSize: parseFloat(predSize.value) || 20,
             predSpeed: parseFloat(predSpeed.value) || 1.5,
-            preyLife: parseFloat(preyLife.value) || 20,
-            predLife: parseFloat(predLife.value) || 20,
+            preyLife: parseFloat(preyLife.value) || 5,
+            predLife: parseFloat(predLife.value) || 2.5,
             preyFeedLifespan: parseFloat(preyFeedLifespan.value) || 2,
             predFeedLifespan: parseFloat(predFeedLifespan.value) || 2,
             catchTime: parseFloat(catchTime.value) || 0.1,
             preyMaxSize: parseFloat(preyMaxSize.value) || 50,
             predMaxSize: parseFloat(predMaxSize.value) || 75,
-            preyMaxSpeed: parseFloat(preyMaxSpeed.value) || 10,
-            predMaxSpeed: parseFloat(predMaxSpeed.value) || 10,
+            preyMaxSpeed: parseFloat(preyMaxSpeed.value) || 2,
+            predMaxSpeed: parseFloat(predMaxSpeed.value) || 4,
             preySizeRange: parseRange(preySizeRange.value),
             preySpeedRange: parseRange(preySpeedRange.value),
             predSizeRange: parseRange(predSizeRange.value),
@@ -290,11 +235,11 @@
             predSplit: parseInt(predSplit.value) || 2,
             preySplitProb: parseFloat(preySplitProb.value) / 100 || 0.5,
             predSplitProb: parseFloat(predSplitProb.value) / 100 || 0.5,
-            preyMutProb: parseFloat(preyMutProb.value) / 100 || 0.05,
-            predMutProb: parseFloat(predMutProb.value) / 100 || 0.05,
             envBiasProb: parseFloat(envBiasProb.value) / 100 || 0.3,
-            preySplitThreshold: parseInt(preySplitThreshold.value) || 5,
+            preySplitThreshold: parseInt(preySplitThreshold.value) || 10,
             predSplitThreshold: parseInt(predSplitThreshold.value) || 3,
+            preyThresholdMultiplier: parseFloat(preyThresholdMultiplier.value) || 10,
+            predThresholdMultiplier: parseFloat(predThresholdMultiplier.value) || 5,
         };
     }
 
@@ -306,121 +251,41 @@
         entities = [];
         foods = [];
         simTime = 0; generation = 0;
-        disaster.active = false; disaster.type = ''; disaster.timer = 0;
-        bgColor = { r: randInt(40,200), g: randInt(40,200), b: randInt(40,200) };
+        const bgVal = randInt(40,200);
+        bgColor = { r: bgVal, g: bgVal, b: bgVal };
         bgColorPicker.value = rgbToStr(bgColor.r, bgColor.g, bgColor.b);
         for (let i=0; i<p.preyNum; i++) {
-            const c = randomColor();
+            const c = randomGray();
             entities.push(new Entity('prey', rand(20,W-20), rand(20,H-20), p.preySize, p.preySpeed, c, p.preyLife));
         }
         for (let i=0; i<p.predNum; i++) {
-            const c = randomColor();
+            const c = randomGray();
             entities.push(new Entity('predator', rand(20,W-20), rand(20,H-20), p.predSize, p.predSpeed, c, p.predLife));
         }
-        for (let i=0; i<p.preyNum*5; i++) {
+        const maxFood = p.preyNum * 20;
+        const initFoodCount = Math.min(p.preyNum * 10, maxFood);
+        for (let i=0; i<initFoodCount; i++) {
             foods.push({ x: rand(10,W-10), y: rand(10,H-10), r: 4 });
         }
+        foodMaxEl.textContent = maxFood;
         Object.keys(history).forEach(k => history[k]=[]);
         scatterData.x = []; scatterData.y = [];
         updateCharts(true);
         updateUI();
-        eventLog.innerHTML = '🌱 已重置，点击“开始”运行';
-        activeDisasterEl.innerHTML = '🌪️ 灾害: 无';
+        eventLog.innerHTML = '🌱 已重置 (采集者阈值10，捕猎者阈值5)';
         draw();
     }
 
-    // ---------- 灾害触发函数 ----------
-    function triggerDisaster(typeIndex) {
-        const p = parseParams();
-        const msg = ['🌾 五谷丰登!', '🌀 环境骤变!', '📡 伪装失效!', '🌋 地震!', '☀️ 干旱!', '🦠 瘟疫!', '❄️ 暴风雪!', '⚡ 磁暴!'];
-        switch(typeIndex) {
-            case 0: {
-                const cnt = entities.filter(e => e.isPrey && e.alive).length;
-                for (let i=0; i<cnt; i++) foods.push({ x: rand(20,W-20), y: rand(20,H-20), r: 4 });
-                eventLog.innerHTML = msg[0] + ' +' + cnt + ' 食物';
-                break;
-            }
-            case 1: {
-                const shift = 40;
-                bgColor.r = clamp(bgColor.r + rand(-shift, shift), 10, 245);
-                bgColor.g = clamp(bgColor.g + rand(-shift, shift), 10, 245);
-                bgColor.b = clamp(bgColor.b + rand(-shift, shift), 10, 245);
-                bgColorPicker.value = rgbToStr(bgColor.r, bgColor.g, bgColor.b);
-                eventLog.innerHTML = msg[1];
-                break;
-            }
-            case 2: {
-                for (let e of entities) {
-                    if (e.alive) {
-                        const inv = { r: 255-bgColor.r, g: 255-bgColor.g, b: 255-bgColor.b };
-                        e.color = { r: clamp(e.color.r + inv.r*0.4,0,255), g: clamp(e.color.g + inv.g*0.4,0,255), b: clamp(e.color.b + inv.b*0.4,0,255) };
-                    }
-                }
-                eventLog.innerHTML = msg[2];
-                break;
-            }
-            case 3: {
-                for (let e of entities) {
-                    if (e.alive) {
-                        e.x += rand(-25, 25);
-                        e.y += rand(-25, 25);
-                        e.vx += rand(-0.5, 0.5);
-                        e.vy += rand(-0.5, 0.5);
-                        e.x = clamp(e.x, 5, W-5);
-                        e.y = clamp(e.y, 5, H-5);
-                    }
-                }
-                eventLog.innerHTML = msg[3];
-                break;
-            }
-            case 4: {
-                const remove = Math.floor(foods.length * 0.5);
-                foods.splice(0, remove);
-                eventLog.innerHTML = msg[4];
-                break;
-            }
-            case 5: {
-                for (let e of entities) {
-                    if (e.alive) {
-                        e.lifespan -= e.maxLifespan * 0.25;
-                        if (e.lifespan < 0) e.alive = false;
-                    }
-                }
-                eventLog.innerHTML = msg[5];
-                break;
-            }
-            case 6: {
-                if (disaster.active && disaster.type === '暴风雪') {
-                    disaster.timer = 5.0;
-                } else {
-                    if (disaster.active && disaster.type === '暴风雪') {
-                        for (let e of entities) if (e.alive) e.speed *= 2;
-                    }
-                    disaster.active = true;
-                    disaster.type = '暴风雪';
-                    disaster.timer = 5.0;
-                    for (let e of entities) if (e.alive) e.speed *= 0.5;
-                    activeDisasterEl.innerHTML = '❄️ 灾害: 暴风雪 (减速)';
-                }
-                eventLog.innerHTML = msg[6] + ' 持续5秒';
-                break;
-            }
-            case 7: {
-                for (let e of entities) {
-                    if (e.alive) {
-                        const shift = 40;
-                        e.color.r = clamp(e.color.r + randInt(-shift, shift), 0, 255);
-                        e.color.g = clamp(e.color.g + randInt(-shift, shift), 0, 255);
-                        e.color.b = clamp(e.color.b + randInt(-shift, shift), 0, 255);
-                    }
-                }
-                eventLog.innerHTML = msg[7];
-                break;
-            }
-        }
+    function getDynamicSplitProb(type, baseProb, thresholdMult, foodRatio) {
+        const initCount = type === 'prey' ? (parseInt(preyNum.value) || 50) : (parseInt(predNum.value) || 20);
+        if (initCount === 0) return 0;
+        const currentCount = entities.filter(e => e.alive && e.type === type).length;
+        const threshold = initCount * thresholdMult;
+        let scale = 1 - (currentCount / threshold);
+        if (scale < 0) scale = 0;
+        return baseProb * scale * (0.5 + 0.5 * foodRatio);
     }
 
-    // ---------- 更新逻辑 ----------
     function updateSim(dt) {
         if (paused || !running) return;
         const p = parseParams();
@@ -431,110 +296,33 @@
         const dtEff = dt * speed;
         simTime += dtEff;
 
-        // 处理持续灾害
-        if (disaster.active) {
-            disaster.timer -= dtEff;
-            if (disaster.timer <= 0) {
-                disaster.active = false;
-                if (disaster.type === '暴风雪') {
-                    for (let e of entities) if (e.alive) e.speed *= 2;
-                }
-                disaster.type = '';
-                activeDisasterEl.innerHTML = '🌪️ 灾害: 无';
+        const maxFood = p.preyNum * 20;
+        if (foods.length < maxFood) {
+            const r = 0.8;
+            const growth = r * (1 - foods.length / maxFood) * foods.length * dtEff;
+            const newFood = Math.min(foods.length + growth, maxFood);
+            const addCount = Math.floor(newFood - foods.length);
+            for (let i=0; i<addCount; i++) {
+                foods.push({ x: rand(10,W-10), y: rand(10,H-10), r: 4 });
+            }
+            if (Math.random() < (newFood - Math.floor(newFood))) {
+                if (foods.length < maxFood) foods.push({ x: rand(10,W-10), y: rand(10,H-10), r: 4 });
             }
         }
 
-        // 环境漂移
         if (simTime % 5 < dtEff) {
-            bgColor.r = clamp(bgColor.r + rand(-2,2), 20, 235);
-            bgColor.g = clamp(bgColor.g + rand(-2,2), 20, 235);
-            bgColor.b = clamp(bgColor.b + rand(-2,2), 20, 235);
+            const shift = rand(-2, 2);
+            const newVal = clamp(bgColor.r + shift, 20, 235);
+            bgColor = { r: newVal, g: newVal, b: newVal };
             bgColorPicker.value = rgbToStr(bgColor.r, bgColor.g, bgColor.b);
         }
 
-        // 随机灾害
-        const baseProb = dtEff * 10;
-        const mul0 = parseFloat(disasterMulInputs[0]?.value || 1);
-        const mul1 = parseFloat(disasterMulInputs[1]?.value || 1);
-        const mul2 = parseFloat(disasterMulInputs[2]?.value || 1);
-        const mul3 = parseFloat(disasterMulInputs[3]?.value || 1);
-        const mul4 = parseFloat(disasterMulInputs[4]?.value || 1);
-        const mul5 = parseFloat(disasterMulInputs[5]?.value || 1);
-        const mul6 = parseFloat(disasterMulInputs[6]?.value || 1);
-        const mul7 = parseFloat(disasterMulInputs[7]?.value || 1);
-
-        if (Math.random() < 0.01 * baseProb * mul0) {
-            const cnt = entities.filter(e => e.isPrey && e.alive).length;
-            for (let i=0; i<cnt; i++) foods.push({ x: rand(20,W-20), y: rand(20,H-20), r: 4 });
-            eventLog.innerHTML = '🌾 五谷丰登! +' + cnt + ' 食物';
-        }
-        if (Math.random() < 0.005 * baseProb * mul1) {
-            const shift = 40;
-            bgColor.r = clamp(bgColor.r + rand(-shift, shift), 10, 245);
-            bgColor.g = clamp(bgColor.g + rand(-shift, shift), 10, 245);
-            bgColor.b = clamp(bgColor.b + rand(-shift, shift), 10, 245);
-            bgColorPicker.value = rgbToStr(bgColor.r, bgColor.g, bgColor.b);
-            eventLog.innerHTML = '🌀 环境骤变!';
-        }
-        if (Math.random() < 0.002 * baseProb * mul2) {
-            for (let e of entities) {
-                if (e.alive) {
-                    const inv = { r: 255-bgColor.r, g: 255-bgColor.g, b: 255-bgColor.b };
-                    e.color = { r: clamp(e.color.r + inv.r*0.4,0,255), g: clamp(e.color.g + inv.g*0.4,0,255), b: clamp(e.color.b + inv.b*0.4,0,255) };
-                }
-            }
-            eventLog.innerHTML = '📡 伪装失效!';
-        }
-        if (Math.random() < 0.002 * baseProb * mul3) {
-            for (let e of entities) {
-                if (e.alive) {
-                    e.x += rand(-25, 25);
-                    e.y += rand(-25, 25);
-                    e.vx += rand(-0.5, 0.5);
-                    e.vy += rand(-0.5, 0.5);
-                    e.x = clamp(e.x, 5, W-5);
-                    e.y = clamp(e.y, 5, H-5);
-                }
-            }
-            eventLog.innerHTML = '🌋 地震!';
-        }
-        if (Math.random() < 0.003 * baseProb * mul4) {
-            const remove = Math.floor(foods.length * 0.5);
-            foods.splice(0, remove);
-            eventLog.innerHTML = '☀️ 干旱!';
-        }
-        if (Math.random() < 0.0015 * baseProb * mul5) {
-            for (let e of entities) {
-                if (e.alive) {
-                    e.lifespan -= e.maxLifespan * 0.25;
-                    if (e.lifespan < 0) e.alive = false;
-                }
-            }
-            eventLog.innerHTML = '🦠 瘟疫!';
-        }
-        if (Math.random() < 0.002 * baseProb * mul6 && !disaster.active) {
-            disaster.active = true;
-            disaster.type = '暴风雪';
-            disaster.timer = 5.0;
-            for (let e of entities) if (e.alive) e.speed *= 0.5;
-            eventLog.innerHTML = '❄️ 暴风雪!';
-            activeDisasterEl.innerHTML = '❄️ 灾害: 暴风雪 (减速)';
-        }
-        if (Math.random() < 0.0015 * baseProb * mul7) {
-            for (let e of entities) {
-                if (e.alive) {
-                    const shift = 40;
-                    e.color.r = clamp(e.color.r + randInt(-shift, shift), 0, 255);
-                    e.color.g = clamp(e.color.g + randInt(-shift, shift), 0, 255);
-                    e.color.b = clamp(e.color.b + randInt(-shift, shift), 0, 255);
-                }
-            }
-            eventLog.innerHTML = '⚡ 磁暴!';
-        }
-
-        // ---- 移动与AI ----
         const preyList = entities.filter(e => e.isPrey && e.alive);
         const predList = entities.filter(e => e.isPredator && e.alive);
+        const foodRatio = Math.min(1, foods.length / maxFood);
+
+        const initPreyCount = parseInt(preyNum.value) || 50;
+        const preyProtectionThreshold = initPreyCount / 10;
 
         for (let e of preyList) {
             let nearFood = null, nearDist = 120;
@@ -564,43 +352,49 @@
             if (e.y < 5) e.y=5; if (e.y > H-5) e.y=H-5;
             if (e.x<10 || e.x>W-10) e.vx *= -0.5;
             if (e.y<10 || e.y>H-10) e.vy *= -0.5;
-            // 吃食物
+
             for (let i=foods.length-1; i>=0; i--) {
                 const f = foods[i];
                 if (Math.hypot(e.x-f.x, e.y-f.y) < e.size/2 + f.r) {
                     const sizeDelta = rand(p.preySizeRange[0], p.preySizeRange[1]);
                     const speedDelta = rand(p.preySpeedRange[0], p.preySpeedRange[1]);
                     e.size = clamp(e.size + sizeDelta, 2, p.preyMaxSize);
-                    e.speed = clamp(e.speed - sizeDelta * 0.1 + speedDelta * 0.2, 0.2, p.preyMaxSpeed);
-                    if (sizeDelta > 0) e.speed = clamp(e.speed - sizeDelta*0.05, 0.2, p.preyMaxSpeed);
-                    else e.speed = clamp(e.speed + Math.abs(sizeDelta)*0.05, 0.2, p.preyMaxSpeed);
+                    e.speed = clamp(e.speed + speedDelta, 0.2, p.preyMaxSpeed);
                     const addLife = p.preyFeedLifespan;
                     e.maxLifespan += addLife;
                     e.lifespan += addLife;
                     foods.splice(i, 1);
                     e.feedCount++;
                     if (e.feedCount >= p.preySplitThreshold) {
-                        if (Math.random() < p.preySplitProb) {
+                        // 使用采集者阈值倍数
+                        const dynProb = getDynamicSplitProb('prey', p.preySplitProb, p.preyThresholdMultiplier, foodRatio);
+                        if (Math.random() < dynProb) {
                             splitEntity(e, 'prey', p);
                         }
                         e.feedCount = 0;
                     }
                 }
             }
+            e.size = clamp(e.size - 3 * dtEff, 2, p.preyMaxSize);
             const diff = colorDiff(e.color, bgColor);
             const normDiff = clamp(diff / 255, 0, 1);
-            e.lifespan -= dtEff * (1 + normDiff * pressure * 1.5);
+            e.lifespan -= dtEff * (1 + normDiff * pressure * 2.5);
             if (e.lifespan <= 0) e.alive = false;
         }
 
+        const preyDensity = preyList.length / (W * H / 10000);
+        const predDensity = predList.length / (W * H / 10000);
         for (let e of predList) {
-            let target = null, tDist = 250;
-            for (let prey of preyList) {
-                if (!prey.alive) continue;
-                const diff = colorDiff(prey.color, bgColor);
-                const detectRange = 150 + diff * 0.4;
-                const d = Math.hypot(e.x-prey.x, e.y-prey.y);
-                if (d < detectRange && d < tDist) { tDist = d; target = prey; }
+            let target = null;
+            if (preyList.length > preyProtectionThreshold) {
+                let tDist = 250;
+                for (let prey of preyList) {
+                    if (!prey.alive) continue;
+                    const diff = colorDiff(prey.color, bgColor);
+                    const detectRange = 150 + diff * 0.4;
+                    const d = Math.hypot(e.x-prey.x, e.y-prey.y);
+                    if (d < detectRange && d < tDist) { tDist = d; target = prey; }
+                }
             }
             if (target) {
                 const dx = target.x - e.x, dy = target.y - e.y;
@@ -608,13 +402,14 @@
                 if (d>1) { e.vx += (dx/d)*0.08; e.vy += (dy/d)*0.08; }
                 if (d < (e.size/2 + target.size/2)) {
                     e.contactTimer += dtEff;
-                    if (e.contactTimer >= p.catchTime) {
+                    let catchSpeed = 1.0;
+                    catchSpeed *= (1 + preyDensity * 0.1);
+                    catchSpeed /= (1 + predDensity * 0.05);
+                    if (e.contactTimer >= p.catchTime / catchSpeed) {
                         const sizeDelta = rand(p.predSizeRange[0], p.predSizeRange[1]);
                         const speedDelta = rand(p.predSpeedRange[0], p.predSpeedRange[1]);
                         e.size = clamp(e.size + sizeDelta, 3, p.predMaxSize);
-                        e.speed = clamp(e.speed - sizeDelta*0.05 + speedDelta*0.2, 0.2, p.predMaxSpeed);
-                        if (sizeDelta > 0) e.speed = clamp(e.speed - sizeDelta*0.04, 0.2, p.predMaxSpeed);
-                        else e.speed = clamp(e.speed + Math.abs(sizeDelta)*0.04, 0.2, p.predMaxSpeed);
+                        e.speed = clamp(e.speed + speedDelta, 0.2, p.predMaxSpeed);
                         const addLife = p.predFeedLifespan;
                         e.maxLifespan += addLife;
                         e.lifespan += addLife;
@@ -622,7 +417,9 @@
                         e.contactTimer = 0;
                         e.feedCount++;
                         if (e.feedCount >= p.predSplitThreshold) {
-                            if (Math.random() < p.predSplitProb) {
+                            // 使用捕猎者阈值倍数
+                            const dynProb = getDynamicSplitProb('predator', p.predSplitProb, p.predThresholdMultiplier, foodRatio);
+                            if (Math.random() < dynProb) {
                                 splitEntity(e, 'predator', p);
                             }
                             e.feedCount = 0;
@@ -646,33 +443,21 @@
             if (e.y < 5) e.y=5; if (e.y > H-5) e.y=H-5;
             if (e.x<10 || e.x>W-10) e.vx *= -0.5;
             if (e.y<10 || e.y>H-10) e.vy *= -0.5;
+            e.size = clamp(e.size - 3 * dtEff, 3, p.predMaxSize);
             const diff = colorDiff(e.color, bgColor);
             const normDiff = clamp(diff / 255, 0, 1);
-            e.lifespan -= dtEff * (1 + normDiff * pressure * 1.2);
+            e.lifespan -= dtEff * (1 + normDiff * pressure * 2.0);
             if (e.lifespan <= 0) e.alive = false;
         }
 
-        // 斩杀
-        const initPrey = parseInt(preyNum.value) || 25;
-        const initPred = parseInt(predNum.value) || 10;
-        let alivePrey = entities.filter(e => e.isPrey && e.alive);
-        let alivePred = entities.filter(e => e.isPredator && e.alive);
-        if (alivePrey.length > initPrey * 10) {
-            alivePrey.sort((a,b) => a.lifespan - b.lifespan);
-            const kill = Math.floor(alivePrey.length / 2);
-            for (let i=0; i<kill; i++) alivePrey[i].alive = false;
-            eventLog.innerHTML = '⚔️ 斩杀: 采集者数量超标';
-        }
-        if (alivePred.length > initPred * 10) {
-            alivePred.sort((a,b) => a.lifespan - b.lifespan);
-            const kill = Math.floor(alivePred.length / 2);
-            for (let i=0; i<kill; i++) alivePred[i].alive = false;
-            eventLog.innerHTML = '⚔️ 斩杀: 捕猎者数量超标';
-        }
-
         entities = entities.filter(e => e.alive);
+        const alivePrey = entities.filter(e => e.isPrey && e.alive);
         if (foods.length < alivePrey.length * 2) {
-            for (let i=0; i<alivePrey.length; i++) foods.push({ x: rand(20,W-20), y: rand(20,H-20), r: 4 });
+            const shortage = alivePrey.length * 2 - foods.length;
+            const addCount = Math.min(shortage, maxFood - foods.length);
+            for (let i=0; i<addCount; i++) {
+                foods.push({ x: rand(20,W-20), y: rand(20,H-20), r: 4 });
+            }
         }
 
         generation++;
@@ -680,42 +465,32 @@
         updateUI();
     }
 
-    // ---------- 分裂函数 ----------
+    // ----- 分裂函数（含定向突变）-----
     function splitEntity(parent, type, p) {
         const count = type === 'prey' ? p.preySplit : p.predSplit;
-        const mutProb = type === 'prey' ? p.preyMutProb : p.predMutProb;
         const envBias = p.envBiasProb;
         for (let i=0; i<count; i++) {
-            let childColor = { ...parent.color };
-            if (Math.random() < mutProb) {
-                const shift = 25;
-                childColor.r = clamp(childColor.r + randInt(-shift, shift), 0, 255);
-                childColor.g = clamp(childColor.g + randInt(-shift, shift), 0, 255);
-                childColor.b = clamp(childColor.b + randInt(-shift, shift), 0, 255);
-            }
+            let childGray = parent.color.r;
             if (Math.random() < envBias) {
-                childColor.r = clamp(childColor.r + (bgColor.r - childColor.r)*0.3, 0, 255);
-                childColor.g = clamp(childColor.g + (bgColor.g - childColor.g)*0.3, 0, 255);
-                childColor.b = clamp(childColor.b + (bgColor.b - childColor.b)*0.3, 0, 255);
+                const shift = (bgColor.r - childGray) * 0.3;
+                childGray = clamp(childGray + shift, 0, 255);
             }
-            const childSize = clamp(parent.size * rand(0.8,1.2), 3, type==='prey'?p.preyMaxSize:p.predMaxSize);
-            const childSpeed = clamp(parent.speed * rand(0.8,1.2), 0.2, type==='prey'?p.preyMaxSpeed:p.predMaxSpeed);
-            const childMaxLife = parent.maxLifespan * rand(0.9, 1.1);
+            const childColor = { r: childGray, g: childGray, b: childGray };
+            const childSize = clamp(parent.size * rand(0.9, 1.1), 3, type==='prey'?p.preyMaxSize:p.predMaxSize);
+            const childSpeed = clamp(parent.speed * rand(0.95, 1.05), 0.2, type==='prey'?p.preyMaxSpeed:p.predMaxSpeed);
+            const childMaxLife = parent.maxLifespan * rand(0.95, 1.05);
             const child = new Entity(type, parent.x + rand(-20,20), parent.y + rand(-20,20), childSize, childSpeed, childColor, childMaxLife);
             child.vx = rand(-0.5,0.5); child.vy = rand(-0.5,0.5);
             entities.push(child);
         }
     }
 
-    // ---------- 图表更新 ----------
     function updateCharts(forceClear) {
         const prey = entities.filter(e => e.isPrey && e.alive);
         const pred = entities.filter(e => e.isPredator && e.alive);
-        const bgLum = lum(bgColor.r, bgColor.g, bgColor.b);
-        const preyLum = prey.length ? prey.reduce((s,e) => s + lum(e.color.r,e.color.g,e.color.b),0)/prey.length : bgLum;
-        const predLum = pred.length ? pred.reduce((s,e) => s + lum(e.color.r,e.color.g,e.color.b),0)/pred.length : bgLum;
-        const preyHue = prey.length ? prey.reduce((s,e) => s + rgbToHue(e.color.r,e.color.g,e.color.b),0)/prey.length : 0;
-        const predHue = pred.length ? pred.reduce((s,e) => s + rgbToHue(e.color.r,e.color.g,e.color.b),0)/pred.length : 0;
+        const bgLum = bgColor.r;
+        const preyLum = prey.length ? prey.reduce((s,e) => s + e.color.r, 0)/prey.length : bgLum;
+        const predLum = pred.length ? pred.reduce((s,e) => s + e.color.r, 0)/pred.length : bgLum;
         const avgPreySize = prey.length ? prey.reduce((s,e) => s + e.size,0)/prey.length : 0;
         const avgPredSize = pred.length ? pred.reduce((s,e) => s + e.size,0)/pred.length : 0;
 
@@ -723,14 +498,12 @@
         history.bgLum.push(bgLum);
         history.preyLum.push(preyLum);
         history.predLum.push(predLum);
-        history.preyHue.push(preyHue);
-        history.predHue.push(predHue);
         history.preyPop.push(prey.length);
         history.predPop.push(pred.length);
         history.preyAvgSize.push(avgPreySize);
         history.predAvgSize.push(avgPredSize);
         if (history.time.length > MAX_HISTORY) {
-            ['time','bgLum','preyLum','predLum','preyHue','predHue','preyPop','predPop','preyAvgSize','predAvgSize'].forEach(k => history[k].shift());
+            ['time','bgLum','preyLum','predLum','preyPop','predPop','preyAvgSize','predAvgSize'].forEach(k => history[k].shift());
         }
 
         const sample = entities.filter(e => e.alive).slice(0, 80);
@@ -748,16 +521,14 @@
             const ctx3 = document.getElementById('popChart').getContext('2d');
             trendChart = new Chart(ctx1, {
                 type: 'line', data: { labels: [], datasets: [
-                    { label: '环境亮度', data: [], borderColor: '#f2c94a', backgroundColor: 'transparent', tension:0.2, pointRadius:0 },
-                    { label: '采集者亮度', data: [], borderColor: '#6fcf97', backgroundColor: 'transparent', tension:0.2, pointRadius:0 },
-                    { label: '捕猎者亮度', data: [], borderColor: '#eb5757', backgroundColor: 'transparent', tension:0.2, pointRadius:0 },
-                    { label: '采集者色相', data: [], borderColor: '#ff9f43', backgroundColor: 'transparent', tension:0.2, pointRadius:0, borderDash: [5,5] },
-                    { label: '捕猎者色相', data: [], borderColor: '#a29bfe', backgroundColor: 'transparent', tension:0.2, pointRadius:0, borderDash: [5,5] }
-                ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#aaa', boxWidth:10 } } }, scales: { y: { min:0, max:360, grid: { color:'#333' } }, x: { grid: { color:'#333' }, ticks: { color:'#888' } } } }
+                    { label: '环境灰度', data: [], borderColor: '#f2c94a', backgroundColor: 'transparent', tension:0.2, pointRadius:0 },
+                    { label: '采集者灰度', data: [], borderColor: '#6fcf97', backgroundColor: 'transparent', tension:0.2, pointRadius:0 },
+                    { label: '捕猎者灰度', data: [], borderColor: '#eb5757', backgroundColor: 'transparent', tension:0.2, pointRadius:0 }
+                ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#aaa', boxWidth:10 } } }, scales: { y: { min:0, max:255, grid: { color:'#333' } }, x: { grid: { color:'#333' }, ticks: { color:'#888' } } } }
             });
             scatterChart = new Chart(ctx2, {
-                type: 'scatter', data: { datasets: [{ label: '个体 (色差 vs 剩余寿命%)', data: [], backgroundColor: '#f2994a', pointRadius:2 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#aaa' } } }, scales: { x: { title: { display: true, text: '色差 (与环境)', color:'#aaa' }, grid: { color:'#333' } }, y: { title: { display: true, text: '剩余寿命 %', color:'#aaa' }, min:0, max:100, grid: { color:'#333' } } } }
+                type: 'scatter', data: { datasets: [{ label: '个体 (灰度差 vs 剩余寿命%)', data: [], backgroundColor: '#f2994a', pointRadius:2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#aaa' } } }, scales: { x: { title: { display: true, text: '灰度差 (与环境)', color:'#aaa' }, grid: { color:'#333' } }, y: { title: { display: true, text: '剩余寿命 %', color:'#aaa' }, min:0, max:100, grid: { color:'#333' } } } }
             });
             popChart = new Chart(ctx3, {
                 type: 'line', data: { labels: [], datasets: [
@@ -774,8 +545,6 @@
         trendChart.data.datasets[0].data = history.bgLum;
         trendChart.data.datasets[1].data = history.preyLum;
         trendChart.data.datasets[2].data = history.predLum;
-        trendChart.data.datasets[3].data = history.preyHue;
-        trendChart.data.datasets[4].data = history.predHue;
         trendChart.update('none');
 
         const scatterD = scatterData.x.map((x,i) => ({ x, y: scatterData.y[i] }));
@@ -797,9 +566,10 @@
         predCountEl.textContent = pred.length;
         foodCountEl.textContent = foods.length;
         genCountEl.textContent = generation;
+        const maxFood = (parseInt(preyNum.value) || 50) * 20;
+        foodMaxEl.textContent = maxFood;
     }
 
-    // ---------- 绘制 ----------
     function draw() {
         ctx.clearRect(0, 0, W, H);
         ctx.fillStyle = rgbToStr(bgColor.r, bgColor.g, bgColor.b);
@@ -807,8 +577,8 @@
         for (let f of foods) {
             ctx.beginPath();
             ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
-            ctx.fillStyle = '#7ddf7d';
-            ctx.shadowColor = '#7ddf7d'; ctx.shadowBlur = 8;
+            ctx.fillStyle = '#aaaaaa';
+            ctx.shadowColor = '#aaaaaa'; ctx.shadowBlur = 8;
             ctx.fill();
             ctx.shadowBlur = 0;
         }
@@ -827,6 +597,39 @@
                 ctx.arc(e.x, e.y, e.size/2, 0, Math.PI*2);
                 ctx.fill();
                 ctx.stroke();
+                if (e.size > 4) {
+                    const eyeSize = e.size * 0.18;
+                    const eyeOffset = e.size * 0.28;
+                    let dx = e.vx, dy = e.vy;
+                    let len = Math.hypot(dx, dy);
+                    if (len < 0.01) { dx = 1; dy = 0; len = 1; }
+                    const nx = dx / len, ny = dy / len;
+                    const perpX = -ny, perpY = nx;
+                    const eye1x = e.x + nx * eyeOffset + perpX * eyeOffset;
+                    const eye1y = e.y + ny * eyeOffset + perpY * eyeOffset;
+                    const eye2x = e.x + nx * eyeOffset - perpX * eyeOffset;
+                    const eye2y = e.y + ny * eyeOffset - perpY * eyeOffset;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(eye1x, eye1y, eyeSize, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(eye2x, eye2y, eyeSize, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.fillStyle = '#000000';
+                    const pupilSize = eyeSize * 0.6;
+                    const pupilOff = eyeSize * 0.35;
+                    const pupil1x = eye1x + nx * pupilOff;
+                    const pupil1y = eye1y + ny * pupilOff;
+                    const pupil2x = eye2x + nx * pupilOff;
+                    const pupil2y = eye2y + ny * pupilOff;
+                    ctx.beginPath();
+                    ctx.arc(pupil1x, pupil1y, pupilSize, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(pupil2x, pupil2y, pupilSize, 0, Math.PI*2);
+                    ctx.fill();
+                }
             }
             const ratio = clamp(e.lifespan / e.maxLifespan, 0, 1);
             ctx.fillStyle = ratio > 0.5 ? '#6fcf97' : '#f2994a';
@@ -835,13 +638,8 @@
         ctx.fillStyle = '#fff'; ctx.font = '12px monospace';
         ctx.fillText(`环境压力: ${(parseFloat(pressureCoeff.value)||1).toFixed(1)}x`, 16, 22);
         ctx.fillText(`个体数: ${entities.filter(e=>e.alive).length}`, 16, 40);
-        if (disaster.active) {
-            ctx.fillStyle = '#ff6b6b'; ctx.font = 'bold 18px sans-serif';
-            ctx.fillText(`⚠️ ${disaster.type} 进行中`, W-200, 30);
-        }
     }
 
-    // ---------- 循环 ----------
     function loop(timestamp) {
         if (!lastTimestamp) lastTimestamp = timestamp;
         let dt = (timestamp - lastTimestamp) / 1000;
@@ -855,7 +653,6 @@
         frameId = requestAnimationFrame(loop);
     }
 
-    // ---------- 控制 ----------
     function startSim() {
         if (!running) {
             running = true; paused = false;
@@ -891,7 +688,12 @@
     bgColorPicker.addEventListener('input', function() {
         const val = this.value;
         const m = val.match(/\d+/g);
-        if (m) { bgColor.r = parseInt(m[0]); bgColor.g = parseInt(m[1]); bgColor.b = parseInt(m[2]); }
+        if (m) {
+            const r = parseInt(m[0]), g = parseInt(m[1]), b = parseInt(m[2]);
+            const gray = Math.round(0.299*r + 0.587*g + 0.114*b);
+            bgColor = { r: gray, g: gray, b: gray };
+            this.value = rgbToStr(gray, gray, gray);
+        }
     });
 
     canvas.addEventListener('click', function(e) {
@@ -900,17 +702,19 @@
         const scaleY = canvas.height / rect.height;
         const mx = (e.clientX - rect.left) * scaleX;
         const my = (e.clientY - rect.top) * scaleY;
-        for (let i=0; i<20; i++) {
+        const maxFood = (parseInt(preyNum.value) || 50) * 20;
+        let addCount = 20;
+        if (foods.length + addCount > maxFood) {
+            addCount = maxFood - foods.length;
+        }
+        for (let i=0; i<addCount; i++) {
             foods.push({ x: mx + rand(-30,30), y: my + rand(-30,30), r: 4 });
         }
-        eventLog.innerHTML = '🍕 手动投喂 +20 食物';
-    });
-
-    document.querySelectorAll('.btn-disaster').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const idx = parseInt(this.dataset.disaster);
-            if (!isNaN(idx)) triggerDisaster(idx);
-        });
+        if (addCount > 0) {
+            eventLog.innerHTML = '🍕 手动投喂 +' + addCount + ' 食物';
+        } else {
+            eventLog.innerHTML = '🍕 食物已达上限，无法投喂';
+        }
     });
 
     resetSim();
