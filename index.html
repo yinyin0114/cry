@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌍 灰度进化 · 定向突变</title>
+    <title>🌍 灰度进化 · 可调大小下限</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,7 +47,7 @@
 <body>
 <div class="container">
     <div class="panel">
-        <h2>🧬 灰度进化 · 定向突变</h2>
+        <h2>🧬 灰度进化 · 可调下限</h2>
         <div class="status-bar">
             <div class="status-item"><span class="status-dot" style="background:#6fcf97;"></span> 采集者: <span id="preyCount">0</span></div>
             <div class="status-item"><span class="status-dot" style="background:#eb5757;"></span> 捕猎者: <span id="predCount">0</span></div>
@@ -85,10 +85,13 @@
                 <label>采集者寿命(s) <input type="number" id="preyLife" value="5" step="0.5"></label>
                 <label>捕猎者寿命(s) <input type="number" id="predLife" value="2.5" step="0.5"></label>
                 <label style="color:#f0b34b;">🍽️ 采集者进食+寿命 <input type="number" id="preyFeedLifespan" value="2" step="0.5"></label>
-                <label style="color:#f0b34b;">🍽️ 捕猎者进食+寿命 <input type="number" id="predFeedLifespan" value="2" step="0.5"></label>
+                <!-- 捕猎者进食+寿命改为1 -->
+                <label style="color:#f0b34b;">🍽️ 捕猎者进食+寿命 <input type="number" id="predFeedLifespan" value="1" step="0.5"></label>
                 <label>捕猎接触时间(s) <input type="number" id="catchTime" value="0.1" step="0.01"></label>
                 <label>采集者大小上限 <input type="number" id="preyMaxSize" value="50"></label>
                 <label>捕猎者大小上限 <input type="number" id="predMaxSize" value="75"></label>
+                <label>采集者大小下限 <input type="number" id="preyMinSize" value="10" step="0.5"></label>
+                <label>捕猎者大小下限 <input type="number" id="predMinSize" value="10" step="0.5"></label>
                 <label>采集者速度上限 <input type="number" id="preyMaxSpeed" value="2" step="0.05"></label>
                 <label>捕猎者速度上限 <input type="number" id="predMaxSpeed" value="4" step="0.05"></label>
                 <label class="full">采集者体积增量上限 <input type="text" id="preySizeRange" value="0~5"></label>
@@ -102,7 +105,6 @@
                 <label class="full" style="color:#f0b34b;">🌿 环境导向变异概率% <input type="number" id="envBiasProb" value="30"></label>
                 <label class="full" style="color:#f0b34b;">🍽️ 采集者分裂阈值(食物) <input type="number" id="preySplitThreshold" value="10"></label>
                 <label class="full" style="color:#f0b34b;">🍽️ 捕猎者分裂阈值(猎物) <input type="number" id="predSplitThreshold" value="3"></label>
-                <!-- 拆分为两个阈值倍数 -->
                 <label class="full" style="color:#f0b34b;">📊 采集者数量阈值倍数 <input type="number" id="preyThresholdMultiplier" value="10" step="0.5"></label>
                 <label class="full" style="color:#f0b34b;">📊 捕猎者数量阈值倍数 <input type="number" id="predThresholdMultiplier" value="5" step="0.5"></label>
             </div>
@@ -136,6 +138,8 @@
     const predFeedLifespan = $('predFeedLifespan');
     const catchTime = $('catchTime');
     const preyMaxSize = $('preyMaxSize'), predMaxSize = $('predMaxSize');
+    const preyMinSize = $('preyMinSize');
+    const predMinSize = $('predMinSize');
     const preyMaxSpeed = $('preyMaxSpeed'), predMaxSpeed = $('predMaxSpeed');
     const preySizeRange = $('preySizeRange'), preySpeedRange = $('preySpeedRange');
     const predSizeRange = $('predSizeRange'), predSpeedRange = $('predSpeedRange');
@@ -144,7 +148,6 @@
     const envBiasProb = $('envBiasProb');
     const preySplitThreshold = $('preySplitThreshold');
     const predSplitThreshold = $('predSplitThreshold');
-    // 两个独立的阈值倍数
     const preyThresholdMultiplier = $('preyThresholdMultiplier');
     const predThresholdMultiplier = $('predThresholdMultiplier');
     const speedSlider = $('speedSlider'), speedLabel = $('speedLabel');
@@ -191,10 +194,10 @@
     }
 
     class Entity {
-        constructor(type, x, y, size, speed, color, lifespan) {
+        constructor(type, x, y, size, speed, color, lifespan, minSize) {
             this.type = type;
             this.x = x; this.y = y;
-            this.size = size;
+            this.size = Math.max(minSize, size);
             this.speed = speed;
             this.color = color;
             this.maxLifespan = lifespan;
@@ -205,6 +208,7 @@
             this.contactTimer = 0;
             this.target = null;
             this.feedCount = 0;
+            this.minSize = minSize;
         }
         get isPrey() { return this.type === 'prey'; }
         get isPredator() { return this.type === 'predator'; }
@@ -221,10 +225,12 @@
             preyLife: parseFloat(preyLife.value) || 5,
             predLife: parseFloat(predLife.value) || 2.5,
             preyFeedLifespan: parseFloat(preyFeedLifespan.value) || 2,
-            predFeedLifespan: parseFloat(predFeedLifespan.value) || 2,
+            predFeedLifespan: parseFloat(predFeedLifespan.value) || 1,   // 捕猎者进食+寿命改为1
             catchTime: parseFloat(catchTime.value) || 0.1,
             preyMaxSize: parseFloat(preyMaxSize.value) || 50,
             predMaxSize: parseFloat(predMaxSize.value) || 75,
+            preyMinSize: parseFloat(preyMinSize.value) || 10,
+            predMinSize: parseFloat(predMinSize.value) || 10,
             preyMaxSpeed: parseFloat(preyMaxSpeed.value) || 2,
             predMaxSpeed: parseFloat(predMaxSpeed.value) || 4,
             preySizeRange: parseRange(preySizeRange.value),
@@ -256,11 +262,11 @@
         bgColorPicker.value = rgbToStr(bgColor.r, bgColor.g, bgColor.b);
         for (let i=0; i<p.preyNum; i++) {
             const c = randomGray();
-            entities.push(new Entity('prey', rand(20,W-20), rand(20,H-20), p.preySize, p.preySpeed, c, p.preyLife));
+            entities.push(new Entity('prey', rand(20,W-20), rand(20,H-20), p.preySize, p.preySpeed, c, p.preyLife, p.preyMinSize));
         }
         for (let i=0; i<p.predNum; i++) {
             const c = randomGray();
-            entities.push(new Entity('predator', rand(20,W-20), rand(20,H-20), p.predSize, p.predSpeed, c, p.predLife));
+            entities.push(new Entity('predator', rand(20,W-20), rand(20,H-20), p.predSize, p.predSpeed, c, p.predLife, p.predMinSize));
         }
         const maxFood = p.preyNum * 20;
         const initFoodCount = Math.min(p.preyNum * 10, maxFood);
@@ -272,7 +278,7 @@
         scatterData.x = []; scatterData.y = [];
         updateCharts(true);
         updateUI();
-        eventLog.innerHTML = '🌱 已重置 (采集者阈值10，捕猎者阈值5)';
+        eventLog.innerHTML = '🌱 已重置 (捕猎者进食+寿命1s)';
         draw();
     }
 
@@ -358,7 +364,7 @@
                 if (Math.hypot(e.x-f.x, e.y-f.y) < e.size/2 + f.r) {
                     const sizeDelta = rand(p.preySizeRange[0], p.preySizeRange[1]);
                     const speedDelta = rand(p.preySpeedRange[0], p.preySpeedRange[1]);
-                    e.size = clamp(e.size + sizeDelta, 2, p.preyMaxSize);
+                    e.size = clamp(e.size + sizeDelta, e.minSize, p.preyMaxSize);
                     e.speed = clamp(e.speed + speedDelta, 0.2, p.preyMaxSpeed);
                     const addLife = p.preyFeedLifespan;
                     e.maxLifespan += addLife;
@@ -366,7 +372,6 @@
                     foods.splice(i, 1);
                     e.feedCount++;
                     if (e.feedCount >= p.preySplitThreshold) {
-                        // 使用采集者阈值倍数
                         const dynProb = getDynamicSplitProb('prey', p.preySplitProb, p.preyThresholdMultiplier, foodRatio);
                         if (Math.random() < dynProb) {
                             splitEntity(e, 'prey', p);
@@ -375,7 +380,7 @@
                     }
                 }
             }
-            e.size = clamp(e.size - 3 * dtEff, 2, p.preyMaxSize);
+            e.size = clamp(e.size - 3 * dtEff, e.minSize, p.preyMaxSize);
             const diff = colorDiff(e.color, bgColor);
             const normDiff = clamp(diff / 255, 0, 1);
             e.lifespan -= dtEff * (1 + normDiff * pressure * 2.5);
@@ -408,7 +413,7 @@
                     if (e.contactTimer >= p.catchTime / catchSpeed) {
                         const sizeDelta = rand(p.predSizeRange[0], p.predSizeRange[1]);
                         const speedDelta = rand(p.predSpeedRange[0], p.predSpeedRange[1]);
-                        e.size = clamp(e.size + sizeDelta, 3, p.predMaxSize);
+                        e.size = clamp(e.size + sizeDelta, e.minSize, p.predMaxSize);
                         e.speed = clamp(e.speed + speedDelta, 0.2, p.predMaxSpeed);
                         const addLife = p.predFeedLifespan;
                         e.maxLifespan += addLife;
@@ -417,7 +422,6 @@
                         e.contactTimer = 0;
                         e.feedCount++;
                         if (e.feedCount >= p.predSplitThreshold) {
-                            // 使用捕猎者阈值倍数
                             const dynProb = getDynamicSplitProb('predator', p.predSplitProb, p.predThresholdMultiplier, foodRatio);
                             if (Math.random() < dynProb) {
                                 splitEntity(e, 'predator', p);
@@ -443,7 +447,7 @@
             if (e.y < 5) e.y=5; if (e.y > H-5) e.y=H-5;
             if (e.x<10 || e.x>W-10) e.vx *= -0.5;
             if (e.y<10 || e.y>H-10) e.vy *= -0.5;
-            e.size = clamp(e.size - 3 * dtEff, 3, p.predMaxSize);
+            e.size = clamp(e.size - 3 * dtEff, e.minSize, p.predMaxSize);
             const diff = colorDiff(e.color, bgColor);
             const normDiff = clamp(diff / 255, 0, 1);
             e.lifespan -= dtEff * (1 + normDiff * pressure * 2.0);
@@ -469,6 +473,9 @@
     function splitEntity(parent, type, p) {
         const count = type === 'prey' ? p.preySplit : p.predSplit;
         const envBias = p.envBiasProb;
+        const minSize = type === 'prey' ? p.preyMinSize : p.predMinSize;
+        const maxSize = type === 'prey' ? p.preyMaxSize : p.predMaxSize;
+        const maxSpeed = type === 'prey' ? p.preyMaxSpeed : p.predMaxSpeed;
         for (let i=0; i<count; i++) {
             let childGray = parent.color.r;
             if (Math.random() < envBias) {
@@ -476,10 +483,10 @@
                 childGray = clamp(childGray + shift, 0, 255);
             }
             const childColor = { r: childGray, g: childGray, b: childGray };
-            const childSize = clamp(parent.size * rand(0.9, 1.1), 3, type==='prey'?p.preyMaxSize:p.predMaxSize);
-            const childSpeed = clamp(parent.speed * rand(0.95, 1.05), 0.2, type==='prey'?p.preyMaxSpeed:p.predMaxSpeed);
+            const childSize = clamp(parent.size * rand(0.9, 1.1), minSize, maxSize);
+            const childSpeed = clamp(parent.speed * rand(0.95, 1.05), 0.2, maxSpeed);
             const childMaxLife = parent.maxLifespan * rand(0.95, 1.05);
-            const child = new Entity(type, parent.x + rand(-20,20), parent.y + rand(-20,20), childSize, childSpeed, childColor, childMaxLife);
+            const child = new Entity(type, parent.x + rand(-20,20), parent.y + rand(-20,20), childSize, childSpeed, childColor, childMaxLife, minSize);
             child.vx = rand(-0.5,0.5); child.vy = rand(-0.5,0.5);
             entities.push(child);
         }
